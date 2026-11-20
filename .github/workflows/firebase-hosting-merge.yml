@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting
+wename: Deploy to Firebase Hosting
 on:
   push:
     branches: [main]
@@ -13,4 +13,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
           projectId: stoninochapelfinance
-          target: stonino-online-ledger
+        
