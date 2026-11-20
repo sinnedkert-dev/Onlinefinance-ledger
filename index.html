@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sto. Niño Chapel - Online Ledger</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f4f6f9;
+    color: #1e293b;
+    padding: 16px;
+  }
+  header {
+    background: linear-gradient(135deg, #7c2d12, #b45309);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+  header h1 { font-size: 1.4rem; }
+  header p { font-size: .85rem; opacity: .9; margin-top: 4px; }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .summary .box {
+    padding: 14px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .summary .in  { background: #dcfce7; color: #166534; }
+  .summary .out { background: #fee2e2; color: #991b1b; }
+  .summary .bal { background: #dbeafe; color: #1e40af; }
+  .summary .box small { display: block; font-size: .75rem; opacity: .8; }
+  .summary .box strong { font-size: 1.2rem; }
+
+  h2 { font-size: 1rem; margin-bottom: 12px; color: #7c2d12; }
+
+  form { display: grid; gap: 10px; }
+  input, select, button {
+    font-size: 1rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-family: inherit;
+  }
+  button {
+    background: #7c2d12;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover { background: #9a3412; }
+  button.ghost { background: #e2e8f0; color: #1e293b; }
+  button.ghost:hover { background: #cbd5e1; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+  th { background: #f1f5f9; font-size: .8rem; text-transform: uppercase; }
+  td.amt-in  { color: #166534; font-weight: 600; }
+  td.amt-out { color: #991b1b; font-weight: 600; }
+
+  .row-actions button {
+    padding: 4px 8px;
+    font-size: .75rem;
+    margin-right: 4px;
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+  .row-actions button.del { background: #fee2e2; color: #991b1b; }
+
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-bar input, .filter-bar select { flex: 1 1 140px; }
+
+  #status { font-size: .8rem; color: #64748b; margin-top: 6px; }
+  .empty { text-align: center; color: #94a3b8; padding: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⛪ Sto. Niño Chapel — Online Ledger</h1>
+  <p>Simpleng finance tracker para sa simbahan</p>
+</header>
+
+<!-- SUMMARY -->
+<div class="card">
+  <div class="summary">
+    <div class="box in">
+      <small>Kabuuang Pumasok</small>
+      <strong id="totalIn">₱0.00</strong>
+    </div>
+    <div class="box out">
+      <small>Kabuuang Gastos</small>
+      <strong id="totalOut">₱0.00</strong>
+    </div>
+    <div class="box bal">
+      <small>Balanse</small>
+      <strong id="totalBal">₱0.00</strong>
+    </div>
+  </div>
+  <div id="status">Naglo-load…</div>
+</div>
+
+<!-- ADD FORM -->
+<div class="card">
+  <h2>➕ Magdagdag ng Transaksyon</h2>
+  <form id="txForm">
+    <select id="type" required>
+      <option value="in">Pumasok (Income / Donation)</option>
+      <option value="out">Gastos (Expense)</option>
+    </select>
+    <input type="date" id="date" required />
+    <input type="text" id="description" placeholder="Deskripsyon (hal. Sunday Collection)" required maxlength="100"/>
+    <input type="text" id="category" placeholder="Kategorya (hal. Donation, Utilities)" maxlength="40"/>
+    <input type="number" id="amount" placeholder="Halaga (₱)" step="0.01" min="0.01" required />
+    <button type="submit">I-save</button>
+  </form>
+  <div id="editNotice" style="display:none; font-size:.85rem; color:#92400e; margin-top:8px;">
+    ✏️ Nag-e-edit ng existing entry… <button type="button" class="ghost" id="cancelEdit" style="padding:2px 8px;font-size:.75rem;margin-left:6px;">Cancel</button>
+  </div>
+</div>
+
+<!-- LIST -->
+<div class="card">
+  <h2>📋 Listahan ng Transaksyon</h2>
+  <div class="filter-bar">
+    <input type="text" id="search" placeholder="Hanapin…" />
+    <select id="filterType">
+      <option value="all">Lahat</option>
+      <option value="in">Pumasok lang</option>
+      <option value="out">Gastos lang</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Petsa</th>
+          <th>Deskripsyon</th>
+          <th>Kategorya</th>
+          <th style="text-align:right;">Halaga</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="txBody">
+        <tr><td colspan="5" class="empty">Walang transaksyon pa.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FIREBASE SDK (compat build = simplest) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+/* ============================================================
+   🔐 FIREBASE CONFIG
+   ⚠️ PALITAN MO ITO ng bagong key (i-rotate sa Console).
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyD8XqSU5tlx5gVKBNJjIvrkfqwiTbaeSuw",
+  authDomain: "stoninochapelfinance.firebaseapp.com",
+  databaseURL: "https://stoninochapelfinance-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "stoninochapelfinance",
+  storageBucket: "stoninochapelfinance.firebasestorage.app",
+  messagingSenderId: "633724409478",
+  appId: "1:633724409478:web:a01f4e934d836ce3c82307",
+  measurementId: "G-7WCS0PJWY6"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const txRef = db.ref('transactions');
+
+/* ============ STATE ============ */
+let transactions = {};   // { id: {type, date, description, category, amount} }
+let editingId = null;
+
+/* ============ HELPERS ============ */
+const peso = n => '₱' + Number(n||0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+const $ = id => document.getElementById(id);
+
+function showStatus(msg, ok=true) {
+  const el = $('status');
+  el.textContent = msg;
+  el.style.color = ok ? '#16a34a' : '#dc2626';
+  setTimeout(() => el.style.color = '#64748b', 2500);
+}
+
+/* ============ RENDER ============ */
+function render() {
+  const search = $('search').value.toLowerCase().trim();
+  const ft = $('filterType').value;
+
+  const list = Object.entries(transactions)
+    .map(([id, t]) => ({ id, ...t }))
+    .filter(t => {
+      if (ft !== 'all' && t.type !== ft) return false;
+      if (search && !((t.description||'') + ' ' + (t.category||'')).toLowerCase().includes(search)) return false;
+      return true;
+    })
+    .sort((a,b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt||0) - (a.createdAt||0));
+
+  const tbody = $('txBody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Walang transaksyon.</td></tr>';
+  } else {
+    tbody.innerHTML = list.map(t => `
+      <tr>
+        <td>${t.date || ''}</td>
+        <td>${escapeHtml(t.description || '')}</td>
+        <td>${escapeHtml(t.category || '—')}</td>
+        <td style="text-align:right;" class="${t.type==='in'?'amt-in':'amt-out'}">
+          ${t.type==='in'?'+':'−'} ${peso(t.amount)}
+        </td>
+        <td class="row-actions">
+          <button onclick="editTx('${t.id}')">✏️</button>
+          <button class="del" onclick="deleteTx('${t.id}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Summary (all, not filtered)
+  let totalIn = 0, totalOut = 0;
+  Object.values(transactions).forEach(t => {
+    const amt = Number(t.amount) || 0;
+    if (t.type === 'in') totalIn += amt;
+    else totalOut += amt;
+  });
+  $('totalIn').textContent  = peso(totalIn);
+  $('totalOut').textContent = peso(totalOut);
+  $('totalBal').textContent = peso(totalIn - totalOut);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============ CRUD ============ */
+$('txForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = {
+    type: $('type').value,
+    date: $('date').value,
+    description: $('description').value.trim(),
+    category: $('category').value.trim(),
+    amount: parseFloat($('amount').value),
+  };
+  if (!data.description || !data.amount || !data.date) return;
+
+  try {
+    if (editingId) {
+      await txRef.child(editingId).update(data);
+      showStatus('✅ Na-update ang transaksyon.');
+      cancelEdit();
+    } else {
+      data.createdAt = Date.now();
+      await txRef.push(data);
+      showStatus('✅ Naidagdag ang transaksyon.');
+    }
+    $('txForm').reset();
+    $('date').value = new Date().toISOString().slice(0,10);
+  } catch (err) {
+    console.error(err);
+    showStatus('❌ Error: ' + err.message, false);
+  }
+});
+
+window.editTx = function(id) {
+  const t = transactions[id];
+  if (!t) return;
+  editingId = id;
+  $('type').value = t.type;
+  $('date').value = t.date;
+  $('description').value = t.description;
+  $('category').value = t.category || '';
+  $('amount').value = t.amount;
+  $('editNotice').style.display = 'block';
+  window.scrollTo({top: 0, behavior:'smooth'});
+};
+
+window.deleteTx = async function(id) {
+  if (!confirm('Sigurado ka bang buburahin ito?')) return;
+  try {
+    await txRef.child(id).remove();
+    showStatus('🗑️ Nabura ang transaksyon.');
+  } catch (err) {
+    showStatus('❌ Error: ' + err.message, false);
+  }
+};
+
+function cancelEdit() {
+  editingId = null;
+  $('editNotice').style.display = 'none';
+  $('txForm').reset();
+  $('date').value = new Date().toISOString().slice(0,10);
+}
+$('cancelEdit').addEventListener('click', cancelEdit);
+
+/* ============ LIVE SYNC ============ */
+txRef.on('value', snapshot => {
+  transactions = snapshot.val() || {};
+  render();
+  showStatus('🔄 Live sync OK', true);
+}, err => {
+  showStatus('❌ DB Error: ' + err.message, false);
+});
+
+/* ============ FILTERS ============ */
+$('search').addEventListener('input', render);
+$('filterType').addEventListener('change', render);
+
+/* ============ INIT DATE ============ */
+$('date').value = new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
