@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "stonino-online-ledger",
+    "site": "stonino-online-ledger2027",
     "public": ".",
     "ignore": [
       "firebase.json",
