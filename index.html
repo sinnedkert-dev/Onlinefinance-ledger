@@ -16,31 +16,57 @@
     <input id="password" type="password" placeholder="Password" class="w-full border rounded-lg p-3 mb-3">
     <button id="loginBtn" class="w-full bg-black text-white py-3 rounded-xl font-bold">Login</button>
     <p id="loginError" class="text-red-500 text-sm mt-4 hidden"></p>
-    <p class="text-xs text-slate-400 mt-4">Only admin can access. Others will be denied.</p>
     <div class="flex justify-center gap-3 mt-4 text-xs">
       <button onclick="openPolicy('privacy')" class="text-blue-600 underline">Privacy Policy</button>
       <button onclick="openPolicy('terms')" class="text-blue-600 underline">Terms</button>
       <button onclick="openPolicy('content')" class="text-blue-600 underline">Content Policy</button>
     </div>
   </div>
-  <p class="text-[11px] text-slate-400 text-center mt-4 max-w-sm">By signing in, you agree to our Content Policy, Privacy Policy and Terms of Service.</p>
 </div>
+
 <div id="appScreen" class="hidden max-w-3xl mx-auto p-4">
   <div class="flex justify-between items-center mb-4"><div><h1 class="text-2xl font-bold">Stonino Ledger</h1><p id="userEmail" class="text-sm text-slate-500"></p></div><button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Logout</button></div>
+
+  <!-- TOTAL ALL TIME -->
   <div class="grid grid-cols-3 gap-3 mb-4">
-    <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">INCOME</p><p id="totalIn" class="font-bold text-green-600 text-lg">₱0</p></div>
-    <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">EXPENSE</p><p id="totalOut" class="font-bold text-red-600 text-lg">₱0</p></div>
-    <div class="bg-black rounded-xl p-4 text-center"><p class="text-xs text-slate-300">BALANCE</p><p id="balance" class="font-bold text-white text-lg">₱0</p></div>
+    <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL INCOME</p><p id="totalIn" class="font-bold text-green-600 text-lg">₱0</p></div>
+    <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL EXPENSE</p><p id="totalOut" class="font-bold text-red-600 text-lg">₱0</p></div>
+    <div class="bg-black rounded-xl p-4 text-center"><p class="text-xs text-slate-300">TOTAL BALANCE</p><p id="balance" class="font-bold text-white text-lg">₱0</p></div>
   </div>
+
+  <!-- ADD -->
   <div class="bg-white rounded-xl p-4 mb-4">
     <div class="grid grid-cols-2 gap-2 mb-2"><select id="type" class="border rounded-lg p-3"><option value="income">Income +</option><option value="expense">Expense -</option></select><input id="amount" type="number" placeholder="Amount ₱" class="border rounded-lg p-3"></div>
     <input id="desc" placeholder="Description - hal. Offering, Kuryente" class="w-full border rounded-lg p-3 mb-2">
     <input id="date" type="date" class="w-full border rounded-lg p-3 mb-3">
     <button id="addBtn" class="w-full bg-black text-white py-3 rounded-xl font-bold">+ Add Record</button>
   </div>
+
+  <!-- MONTHLY REPORT -->
+  <div class="bg-white rounded-xl p-4 mb-4 border-2 border-black">
+    <h2 class="font-bold text-lg mb-1">📊 Monthly Report</h2>
+    <p class="text-xs text-slate-500 mb-3">Pili ka ng buwan, makikita mo summary + pwede mo i-download.</p>
+    <div class="flex gap-2 mb-3">
+      <input id="reportMonth" type="month" class="flex-1 border rounded-lg p-3">
+      <button id="showAllBtn" class="bg-slate-200 px-4 rounded-lg text-sm font-bold">All</button>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="bg-green-50 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-500">MONTH INCOME</p><p id="monthIn" class="font-bold text-green-600">₱0</p></div>
+      <div class="bg-red-50 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-500">MONTH EXPENSE</p><p id="monthOut" class="font-bold text-red-600">₱0</p></div>
+      <div class="bg-slate-900 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-300">MONTH BALANCE</p><p id="monthBal" class="font-bold text-white">₱0</p></div>
+    </div>
+    <p id="monthLabel" class="text-xs text-slate-500 mb-3 text-center">Showing: All Records</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="downloadCsv" class="bg-green-600 text-white py-3 rounded-xl font-bold text-sm">⬇ Download CSV / Excel</button>
+      <button id="printReport" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">🖨 Print / Save as PDF</button>
+    </div>
+    <p class="text-[11px] text-slate-400 mt-2 text-center">CSV = pang Excel. Print = piliin mo Save as PDF para pang-report.</p>
+  </div>
+
   <div id="list" class="space-y-2"></div>
   <div class="text-center mt-8 pb-6"><p class="text-xs text-slate-400">© 2026 Stonino Online Ledger</p><div class="flex justify-center gap-3 mt-2 text-xs"><button onclick="openPolicy('privacy')" class="text-blue-600 underline">Privacy Policy</button><button onclick="openPolicy('terms')" class="text-blue-600 underline">Terms</button><button onclick="openPolicy('content')" class="text-blue-600 underline">Content Policy</button></div></div>
 </div>
+
 <div id="policyModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6"><div class="flex justify-between"><h2 id="policyTitle" class="text-xl font-bold mb-3"></h2><button onclick="closePolicy()" class="text-2xl">×</button></div><div id="policyBody" class="text-sm text-slate-600 space-y-3"></div><button onclick="closePolicy()" class="w-full bg-black text-white py-3 rounded-xl font-bold mt-5">Close</button></div></div>
 <script>
 const policies = {
@@ -68,6 +94,8 @@ const ADMIN_UID = "4rBLfsIDFEOJHIGvPvcU8y6Kite2";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let allRecords = [];
+let selectedMonth = "";
 const loginScreen = document.getElementById('loginScreen');
 const appScreen = document.getElementById('appScreen');
 const loginError = document.getElementById('loginError');
@@ -80,11 +108,14 @@ document.getElementById('loginBtn').onclick = async () => {
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
 onAuthStateChanged(auth, (user) => {
   if (!user) { loginScreen.classList.remove('hidden'); appScreen.classList.add('hidden'); return; }
-  if (user.uid !== ADMIN_UID) { loginError.textContent = "Access denied. Admin only."; loginError.classList.remove('hidden'); signOut(auth); alert("Hindi ka admin."); return; }
+  if (user.uid !== ADMIN_UID) { loginError.textContent = "Access denied. Admin only."; loginError.classList.remove('hidden'); signOut(auth); return; }
   document.getElementById('userEmail').textContent = user.email + " • Admin";
   loginScreen.classList.add('hidden'); appScreen.classList.remove('hidden'); loadData();
 });
 document.getElementById('date').valueAsDate = new Date();
+const now = new Date(); document.getElementById('reportMonth').value = now.toISOString().slice(0,7);
+document.getElementById('reportMonth').addEventListener('change', (e)=>{ selectedMonth = e.target.value; render(); });
+document.getElementById('showAllBtn').onclick = ()=>{ selectedMonth=""; document.getElementById('reportMonth').value=""; render(); };
 document.getElementById('addBtn').onclick = async () => {
   const type = document.getElementById('type').value;
   const amount = parseFloat(document.getElementById('amount').value);
@@ -94,19 +125,53 @@ document.getElementById('addBtn').onclick = async () => {
   await addDoc(collection(db, "finance_records"), { type, amount, desc, date, createdAt: serverTimestamp(), uid: auth.currentUser.uid });
   document.getElementById('amount').value = ""; document.getElementById('desc').value = "";
 };
+function getFiltered(){
+  if(!selectedMonth) return allRecords;
+  return allRecords.filter(r => (r.date||"").startsWith(selectedMonth));
+}
+function render(){
+  let inc=0, out=0; allRecords.forEach(r=>{ if(r.type==="income") inc+=r.amount; else out+=r.amount; });
+  document.getElementById('totalIn').textContent = "₱"+inc.toLocaleString();
+  document.getElementById('totalOut').textContent = "₱"+out.toLocaleString();
+  document.getElementById('balance').textContent = "₱"+(inc-out).toLocaleString();
+  const filtered = getFiltered();
+  let mIn=0, mOut=0; filtered.forEach(r=>{ if(r.type==="income") mIn+=r.amount; else mOut+=r.amount; });
+  document.getElementById('monthIn').textContent = "₱"+mIn.toLocaleString();
+  document.getElementById('monthOut').textContent = "₱"+mOut.toLocaleString();
+  document.getElementById('monthBal').textContent = "₱"+(mIn-mOut).toLocaleString();
+  document.getElementById('monthLabel').textContent = selectedMonth ? "Showing: " + selectedMonth + " • " + filtered.length + " records" : "Showing: All Records • " + filtered.length + " records";
+  let html=""; filtered.forEach(r=>{
+    html += `<div class="bg-white rounded-xl p-3 flex justify-between items-center"><div><p class="font-bold">${r.desc}</p><p class="text-xs text-slate-400">${r.date || ""} • ${r.type}</p></div><div class="flex items-center gap-3"><b class="${r.type==="income"?"text-green-600":"text-red-600"}">${r.type==="income"?"+":"-"}₱${r.amount.toLocaleString()}</b><button onclick="window.delRec('${r.id}')" class="text-red-500 text-xs">Delete</button></div></div>`;
+  });
+  document.getElementById('list').innerHTML = html || "<p class='text-center text-slate-400'>Walang record sa buwan na to.</p>";
+}
 function loadData(){
   const q = query(collection(db, "finance_records"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snap) => {
-    let inc=0, out=0; let html="";
-    snap.forEach(d => { const r = d.data(); if(r.type==="income") inc+=r.amount; else out+=r.amount;
-      html += `<div class="bg-white rounded-xl p-3 flex justify-between items-center"><div><p class="font-bold">${r.desc}</p><p class="text-xs text-slate-400">${r.date || ""} • ${r.type}</p></div><div class="flex items-center gap-3"><b class="${r.type==="income"?"text-green-600":"text-red-600"}">${r.type==="income"?"+":"-"}₱${r.amount.toLocaleString()}</b><button onclick="window.delRec('${d.id}')" class="text-red-500 text-xs">Delete</button></div></div>`; });
-    document.getElementById('list').innerHTML = html || "<p class='text-center text-slate-400'>Walang record pa.</p>";
-    document.getElementById('totalIn').textContent = "₱"+inc.toLocaleString();
-    document.getElementById('totalOut').textContent = "₱"+out.toLocaleString();
-    document.getElementById('balance').textContent = "₱"+(inc-out).toLocaleString();
+    allRecords = [];
+    snap.forEach(d => { allRecords.push({ id: d.id, ...d.data() }); });
+    render();
   });
 }
+document.getElementById('downloadCsv').onclick = ()=>{
+  const filtered = getFiltered();
+  if(filtered.length===0) return alert("Walang record sa buwan na to.");
+  let csv = "Date,Type,Description,Amount\n";
+  filtered.forEach(r=>{ csv += `"${r.date}","${r.type}","${r.desc.replace(/"/g,'')}",${r.amount}\n`; });
+  let mIn=0,mOut=0; filtered.forEach(r=>{ if(r.type==="income") mIn+=r.amount; else mOut+=r.amount; });
+  csv += `\nTotal Income,${mIn}\nTotal Expense,${mOut}\nBalance,${mIn-mOut}\n`;
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Stonino-Report-${selectedMonth||"All-Time"}.csv`; a.click();
+};
+document.getElementById('printReport').onclick = ()=>{
+  const filtered = getFiltered();
+  let mIn=0,mOut=0; filtered.forEach(r=>{ if(r.type==="income") mIn+=r.amount; else mOut+=r.amount; });
+  const w = window.open("", "_blank");
+  let rows = filtered.map(r=>`<tr><td style="padding:8px;border:1px solid #ddd">${r.date}</td><td style="padding:8px;border:1px solid #ddd">${r.type}</td><td style="padding:8px;border:1px solid #ddd">${r.desc}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₱${r.amount.toLocaleString()}</td></tr>`).join("");
+  w.document.write(`<html><head><title>Stonino Report ${selectedMonth||"All"}</title></head><body style="font-family:sans-serif;padding:20px"><h1>Stonino Online Ledger</h1><h2>Monthly Report: ${selectedMonth||"All Records"}</h2><p>Income: ₱${mIn.toLocaleString()} | Expense: ₱${mOut.toLocaleString()} | Balance: ₱${(mIn-mOut).toLocaleString()}</p><table style="width:100%;border-collapse:collapse"><tr><th style="padding:8px;border:1px solid #ddd;text-align:left">Date</th><th style="padding:8px;border:1px solid #ddd;text-align:left">Type</th><th style="padding:8px;border:1px solid #ddd;text-align:left">Description</th><th style="padding:8px;border:1px solid #ddd;text-align:right">Amount</th></tr>${rows}</table><p style="margin-top:20px;font-size:12px;color:#888">Generated: ${new Date().toLocaleString()} • Admin: finance@stonino.com</p><script>window.print()<\/script></body></html>`);
+  w.document.close();
+};
 window.delRec = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"finance_records",id)); };
 </script>
 </body>
-</html>
+                                                                                                                                                                                                                                </html>
