@@ -234,5 +234,22 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
     }
   }, 1000);
 </script>
+<!-- HIDE NOTES SA AUDIT LOG - ADD SA BABA LANG -->
+<script>
+  function hideAuditNote(){
+    // Hanapin yung dilaw na notes na may "Bawat Add"
+    var all = document.querySelectorAll('div');
+    for(var i=0;i<all.length;i++){
+      if(all[i].textContent.includes('Bawat Add, Edit, Delete')){
+        all[i].style.display = 'none';
+        break;
+      }
+    }
+  }
+  // Takbo agad + takbo ulit pag nagpalit ka ng tab
+  setTimeout(hideAuditNote, 500);
+  setTimeout(hideAuditNote, 1500);
+  document.addEventListener('click', function(){ setTimeout(hideAuditNote, 200); });
+                            </script>
 </body>
 </html>
