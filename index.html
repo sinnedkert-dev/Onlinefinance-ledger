@@ -241,30 +241,41 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
     background-attachment: fixed !important;
   }
 </style>
-<!-- FINAL FIX - MAY HINTAY - HINDI NA MAWAWALA -->
+<!-- FINAL TAMA NA - TAMANG AUDIT FIELDS - at / by / detail / time -->
 <script type="module">
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 async function startDonors(){
-  // HINTAYIN MUNA YUNG APP MO - hanggang 10 seconds - para hindi mag-error
   let app = null;
-  for(let i=0;i<50;i++){
-    try{ app = getApp(); break; }catch(e){ await new Promise(r=>setTimeout(r,200)); }
-  }
-  if(!app){ console.log('App hindi pa ready'); return; }
+  for(let i=0;i<50;i++){ try{ app = getApp(); break; }catch(e){ await new Promise(r=>setTimeout(r,200)); } }
+  if(!app) return;
   const db = getFirestore(app);
   window.db = db;
   document.querySelectorAll('#pageDonors, #pagePledges').forEach(el=>el.style.display='none');
   if(document.getElementById('donorsOverlay')) return;
 
-  async function saveAudit(detailsText){
+  // AUDIT - GAYA EXACT NG ORIGINAL MO: action / detail / by / at / time
+  async function saveAudit(detailText){
     try{
-      var email = '';
-      try{ var u = getAuth(app).currentUser; if(u) email = u.email || ''; }catch(e){}
-      await addDoc(collection(db,'audit_logs'), { action:'ADD RECORD', details:detailsText, text:detailsText, email:email, timestamp:serverTimestamp(), createdAt:serverTimestamp() });
-    }catch(e){ console.log('Audit error', e); }
+      var email = 'finance@stonino.com';
+      try{ var u = getAuth(app).currentUser; if(u && u.email) email = u.email; }catch(e){}
+      var now = new Date();
+      await addDoc(collection(db,'audit_logs'), {
+        action: 'ADD RECORD',
+        detail: detailText,
+        details: detailText,
+        text: detailText,
+        by: email,
+        email: email,
+        user: email,
+        at: serverTimestamp(),
+        timestamp: serverTimestamp(),
+        time: now.toISOString(),
+        createdAt: serverTimestamp()
+      });
+    }catch(e){ console.log('Audit error', e); alert('Audit hindi na-save DEN: '+e.message); }
   }
 
   function getAuditBtn(){
@@ -278,8 +289,6 @@ async function startDonors(){
     }
     return null;
   }
-
-  // Hintayin din yung Sidebar - baka hindi pa lumabas
   let auditBtn = null;
   for(let i=0;i<25;i++){ auditBtn = getAuditBtn(); if(auditBtn) break; await new Promise(r=>setTimeout(r,200)); }
   if(!auditBtn) return;
