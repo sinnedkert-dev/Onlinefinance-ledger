@@ -241,21 +241,40 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
     background-attachment: fixed !important;
   }
 </style>
-<!-- ISAHAN SAFE - HINDI NA KAILANGAN GALAWIN TAAS -->
+<!-- ISAHAN SAFE + AUDIT LOG -->
 <script type="module">
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 try{
-  // Kunin yung Firestore na gamit na ng app mo - hindi gagawa ng bago
   const db = getFirestore(getApp());
-  window.db = db; // para lang makita ng ibang code - add lang, hindi palit
-
-  // Linisin yung lumang nasa homepage - itago lang
+  window.db = db;
   document.querySelectorAll('#pageDonors, #pagePledges').forEach(el=>el.style.display='none');
   if(document.getElementById('donorsOverlay')) throw new Error('meron na');
 
-  // ===== 1. SIDEBAR - SA LOOB - PAGKATAPOS NG AUDIT LOG =====
+  // ===== AUDIT LOG HELPER - parehas format ng Audit Log mo =====
+  async function logToAudit(actionText){
+    try{
+      var email = '';
+      try{ var u = getAuth(getApp()).currentUser; if(u) email = u.email || ''; }catch(e){}
+      await addDoc(collection(db,'audit_logs'), {
+        action: 'ADD DONOR / PLEDGE',
+        type: 'ADD DONOR / PLEDGE',
+        details: actionText,
+        text: actionText,
+        message: actionText,
+        description: actionText,
+        email: email,
+        user: email,
+        timestamp: serverTimestamp(),
+        createdAt: new Date().toISOString(),
+        date: new Date().toISOString()
+      });
+    }catch(e){ console.log('Audit log skip', e); }
+  }
+
+  // ===== 1. SIDEBAR =====
   function getAuditBtn(){
     var all = Array.from(document.querySelectorAll('button, div, a'));
     for(var i=0;i<all.length;i++){
@@ -269,40 +288,31 @@ try{
   }
   var auditBtn = getAuditBtn();
   function makeBtn(label){
-    var b=document.createElement('button');
-    b.textContent=label;
+    var b=document.createElement('button'); b.textContent=label;
     b.style.cssText='width:100%;text-align:left;padding:12px 14px;margin-top:8px;border-radius:12px;border:0;background:transparent;font-weight:700;cursor:pointer;font-size:17px;color:#111;display:flex;align-items:center;gap:8px;';
     return b;
   }
   var hasD = Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='👥 Donors');
   var hasP = Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='💰 Pledges');
   var bD=null, bP=null;
-  if(!hasD && auditBtn){
-    bD=makeBtn('👥 Donors');
-    var r=auditBtn; if(auditBtn.parentElement && auditBtn.parentElement.textContent.trim().length<50) r=auditBtn.parentElement;
-    r.insertAdjacentElement('afterend', bD);
-  }
-  if(!hasP && auditBtn){
-    bP=makeBtn('💰 Pledges');
-    if(bD) bD.insertAdjacentElement('afterend', bP);
-    else { var r2=auditBtn; if(auditBtn.parentElement && auditBtn.parentElement.textContent.trim().length<50) r2=auditBtn.parentElement; r2.insertAdjacentElement('afterend', bP); }
-  }
+  if(!hasD && auditBtn){ bD=makeBtn('👥 Donors'); var r=auditBtn; if(auditBtn.parentElement && auditBtn.parentElement.textContent.trim().length<50) r=auditBtn.parentElement; r.insertAdjacentElement('afterend', bD); }
+  if(!hasP && auditBtn){ bP=makeBtn('💰 Pledges'); if(bD) bD.insertAdjacentElement('afterend', bP); else { var r2=auditBtn; if(auditBtn.parentElement && auditBtn.parentElement.textContent.trim().length<50) r2=auditBtn.parentElement; r2.insertAdjacentElement('afterend', bP); } }
 
-  // ===== 2. POPUP - PARANG BAGONG WINDOW - HINDI SA HOMEPAGE =====
+  // ===== 2. POPUP =====
   function makeOverlay(id, title, subtitle, inner){
     var ov=document.createElement('div'); ov.id=id;
     ov.style.cssText='display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#FFF8E7;z-index:9999;overflow-y:auto;padding:16px;padding-bottom:80px;';
     ov.innerHTML='<button onclick="document.getElementById(\''+id+'\').style.display=\'none\'" style="position:sticky;top:0;background:#111;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;margin-bottom:12px;">✕ Close</button><h2 style="font-size:26px;margin:8px 0 4px;">'+title+'</h2><p style="color:#666;margin:0 0 14px;">'+subtitle+'</p>'+inner;
     document.body.appendChild(ov); return ov;
   }
-  makeOverlay('donorsOverlay','👥 Donors / Sponsors','Naka-save sa Firestore',`
+  makeOverlay('donorsOverlay','👥 Donors / Sponsors','Naka-save sa Firestore + Audit Log',`
     <div style="background:#fff;padding:14px;border-radius:14px;margin-bottom:12px;border:1px solid #eee;">
       <input id="donorName" placeholder="Pangalan - ex: Kapitan" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px;box-sizing:border-box;">
       <input id="donorAmt" type="number" placeholder="Amount - ex: 600" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:10px;box-sizing:border-box;">
       <button id="addDonorBtn" style="width:100%;padding:12px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:800;">+ Add Donor</button>
     </div><div id="donorList"><p style="color:#888;">Loading...</p></div>
   `);
-  makeOverlay('pledgesOverlay','💰 Pledges / Pangako','Nangako - Bayad - Kulang',`
+  makeOverlay('pledgesOverlay','💰 Pledges / Pangako','Nangako - Bayad - Kulang + Audit Log',`
     <div style="background:#fff;padding:14px;border-radius:14px;margin-bottom:12px;border:1px solid #eee;">
       <input id="pledgeName" placeholder="Pangalan - ex: Kapitan" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px;box-sizing:border-box;">
       <input id="pledgePromised" type="number" placeholder="Nangako - ex: 1000" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px;box-sizing:border-box;">
@@ -311,7 +321,7 @@ try{
     </div><div id="pledgeList"><p style="color:#888;">Loading...</p></div>
   `);
 
-  // ===== 3. LIST - MODULAR FIRESTORE - TAMA NA TO PARA SA CODE MO =====
+  // ===== 3. LIST =====
   function loadLists(){
     onSnapshot(query(collection(db,'donors'), orderBy('createdAt','desc')), (snap)=>{
       var el=document.getElementById('donorList'); if(snap.empty){ el.innerHTML='<p style="color:#888;">Wala pang donor. Try mo Kapitan - 600</p>'; return; }
@@ -326,8 +336,6 @@ try{
       el.querySelectorAll('[data-del-p]').forEach(b=>b.onclick=()=>{ if(confirm('Burahin pledge DEN?')) deleteDoc(doc(db,'pledges',b.dataset.delP)); });
     });
   }
-
-  // ===== 4. HOOK SIDEBAR SA POPUP =====
   function hook(){
     Array.from(document.querySelectorAll('button')).forEach(el=>{
       var t=el.textContent.trim();
@@ -337,19 +345,29 @@ try{
   }
   hook(); setTimeout(hook,800); setTimeout(hook,2000);
 
-  // ===== 5. ADD - MAY NOTIFICATION =====
+  // ===== 4. ADD + AUDIT LOG =====
   document.getElementById('addDonorBtn').onclick=async()=>{
     var n=document.getElementById('donorName').value.trim(); var a=Number(document.getElementById('donorAmt').value);
     if(!n||!a) return alert('Lagyan mo pangalan at amount DEN');
-    try{ await addDoc(collection(db,'donors'), {name:n, amount:a, createdAt:new Date().toISOString()}); document.getElementById('donorName').value=''; document.getElementById('donorAmt').value=''; alert('Na-save sa Firestore DEN! ✅ Donor: '+n+' ₱'+a); }catch(e){ alert('Hindi na-save DEN: '+e.message); }
+    try{
+      await addDoc(collection(db,'donors'), {name:n, amount:a, createdAt:new Date().toISOString()});
+      await logToAudit('ADD DONOR - '+n+' ₱'+a.toLocaleString());
+      document.getElementById('donorName').value=''; document.getElementById('donorAmt').value='';
+      alert('Na-save sa Firestore + Audit Log DEN! ✅ Donor: '+n+' ₱'+a);
+    }catch(e){ alert('Hindi na-save DEN: '+e.message); }
   };
   document.getElementById('addPledgeBtn').onclick=async()=>{
     var n=document.getElementById('pledgeName').value.trim(); var pr=Number(document.getElementById('pledgePromised').value); var pd=Number(document.getElementById('pledgePaid').value||0);
     if(!n||!pr) return alert('Lagyan mo pangalan at nangako DEN');
-    try{ await addDoc(collection(db,'pledges'), {name:n, promised:pr, paid:pd, createdAt:new Date().toISOString()}); document.getElementById('pledgeName').value=''; document.getElementById('pledgePromised').value=''; document.getElementById('pledgePaid').value=''; alert('Na-save sa Firestore DEN! ✅ Pledge: '+n+' Nangako ₱'+pr+' Bayad ₱'+pd); }catch(e){ alert('Hindi na-save DEN: '+e.message); }
+    try{
+      await addDoc(collection(db,'pledges'), {name:n, promised:pr, paid:pd, createdAt:new Date().toISOString()});
+      await logToAudit('ADD PLEDGE - '+n+' Nangako ₱'+pr.toLocaleString()+' Bayad ₱'+pd.toLocaleString());
+      document.getElementById('pledgeName').value=''; document.getElementById('pledgePromised').value=''; document.getElementById('pledgePaid').value='';
+      alert('Na-save sa Firestore + Audit Log DEN! ✅ Pledge: '+n+' Nangako ₱'+pr+' Bayad ₱'+pd);
+    }catch(e){ alert('Hindi na-save DEN: '+e.message); }
   };
 
-}catch(e){ console.log('Safe Donors error', e); }
-  </script>
+}catch(e){ console.log('Safe Donors + Audit error', e); }
+</script>
 </body>
 </html>
