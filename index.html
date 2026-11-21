@@ -241,57 +241,88 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
     background-attachment: fixed !important;
   }
 </style>
-<!-- DONORS + PLEDGES - AYOS NA - LALABAS TALAGA -->
+<!-- DONORS + PLEDGES - SA LOOB NG SIDEBAR TALAGA -->
+<style>
+  /* Itago muna Donors/Pledges pages - hindi sila lalabas sa homepage */
+  #pageDonors, #pagePledges{ display:none !important; }
+  #pageDonors.active, #pagePledges.active{ display:block !important; }
+</style>
 <script>
 (function(){
   try{
     if(document.getElementById('pageDonors')) return;
 
-    // --- 1. HANAPIN SIDEBAR - HINDI EXACT - KAHIT MAY EMOJI ---
-    var sidebar = document.querySelector('aside');
-    var auditEl = null;
-    document.querySelectorAll('aside *').forEach(function(el){
-      if((el.textContent||'').includes('Audit Log') && !auditEl) auditEl = el;
-    });
-    // Kung may aside - dun tayo maglalagay - kahit hindi mahanap Audit Log
-    var parent = sidebar || (auditEl ? auditEl.parentElement : null);
-    if(!parent) parent = document.body;
-
-    function showPage(id){
-      document.querySelectorAll('[id^="page"]').forEach(function(p){ p.style.display='none'; });
-      var d = document.getElementById(id);
-      if(d) d.style.display='block';
-      // Isara yung sidebar - hanapin X
-      var x = document.querySelector('aside');
-      if(x){
-        // wag pilitin isara - hayaan lang
+    // --- 1. HANAPIN YUNG TUNAY NA AUDIT LOG BUTTON SA SIDEBAR ---
+    // Yung may "Audit Log" at nasa loob ng sidebar - hindi yung sa homepage
+    var all = Array.from(document.querySelectorAll('button, div, a'));
+    var auditBtn = null;
+    for(var i=0;i<all.length;i++){
+      var t = (all[i].textContent||'').trim();
+      // Yung button mismo - maikli lang - "🕵️ Audit Log" - hindi yung malaking page
+      if(t.includes('Audit Log') && t.length < 30){
+        // Check kung nasa sidebar sya - yung magulang nya may "MENU" o "Home" sa paligid
+        var parentText = all[i].parentElement ? all[i].parentElement.textContent : '';
+        if(parentText.includes('Home') && parentText.includes('Monthly')){
+          auditBtn = all[i];
+          break;
+        }
       }
     }
-    function makeBtn(txt){
+    if(!auditBtn){
+      console.log('Hindi nakita Audit Log sa sidebar DEN');
+      return;
+    }
+    console.log('Nakita Audit Log button DEN:', auditBtn);
+
+    // --- 2. GAWA NG 2 BUTTONS - KOPYA STYLE NG AUDIT LOG MO ---
+    function makeSidebarBtn(emoji, label, pageId){
       var b = document.createElement('button');
-      b.textContent = txt;
-      // Gayahin natin style ng Home mo - black pag active, light pag hindi - dito light muna
-      b.style.cssText = 'width:100%;text-align:left;padding:12px 14px;margin-top:8px;border-radius:12px;border:0;background:#EEF2F7;font-weight:700;cursor:pointer;font-size:17px;color:#111;display:flex;align-items:center;gap:8px;';
+      // Gayahin style ng Audit Log mo - parehas na parehas para malinis
+      b.style.cssText = auditBtn.style.cssText || '';
+      // Kung walang inline style - gamitin yung pangkaraniwan mong sidebar style
+      if(!b.style.cssText){
+        b.style.cssText = 'width:100%;text-align:left;padding:12px 14px;margin-top:8px;border-radius:12px;border:0;background:transparent;font-weight:700;cursor:pointer;font-size:17px;color:#111;display:flex;align-items:center;gap:8px;';
+      }
+      b.textContent = emoji + ' ' + label;
+      b.onclick = function(){
+        // Itago lahat ng pages
+        document.querySelectorAll('[id^="page"]').forEach(function(p){ p.classList.remove('active'); p.style.display='none'; });
+        // Isara sidebar - pindutin yung X kung meron
+        var xBtn = document.querySelector('button');
+        // Pakita yung pinili
+        var target = document.getElementById(pageId);
+        if(target){ target.classList.add('active'); target.style.display='block'; }
+        // Isara sidebar - hanapin yung X sa taas
+        var closeBtns = Array.from(document.querySelectorAll('button'));
+        for(var k=0;k<closeBtns.length;k++){ if(closeBtns[k].textContent.trim()==='✕' || closeBtns[k].textContent.trim()==='X'){ closeBtns[k].click(); break; } }
+      };
       return b;
     }
 
-    var b1 = makeBtn('👥 Donors');
-    b1.onclick = function(){ showPage('pageDonors'); };
-    var b2 = makeBtn('💰 Pledges');
-    b2.onclick = function(){ showPage('pagePledges'); };
+    var b1 = makeSidebarBtn('👥','Donors','pageDonors');
+    var b2 = makeSidebarBtn('💰','Pledges','pagePledges');
 
-    // Ilagay sa ilalim ng Audit Log - sa sidebar
-    parent.appendChild(b1);
-    parent.appendChild(b2);
-    console.log('Donors/Pledges buttons NA-ADD NA DEN');
+    // --- ILAGAY PAGKATAPOS NG AUDIT LOG - SA LOOB NG SIDEBAR - HINDI SA BABA NG HOMEPAGE ---
+    // Kung yung Audit Log ay nasa loob ng isang div - ilagay pagkatapos nung div na yun
+    var auditRow = auditBtn;
+    // Umakyat ng konti - hanapin yung row na may padding - para hindi sa loob ng button malagay
+    if(auditBtn.parentElement && auditBtn.parentElement.textContent.trim().length < 50){
+      auditRow = auditBtn.parentElement;
+    }
+    auditRow.insertAdjacentElement('afterend', b1);
+    b1.insertAdjacentElement('afterend', b2);
 
-    // --- 2. PAGES ---
+    // --- 3. PAGES - ILAGAY SA LOOB NG MAIN CONTENT - HINDI SA BODY BABA ---
+    // Hanapin kung nasan yung Home page - dun natin ilalagay Donors/Pledges para hindi sa ilalim ng homepage
+    var homePage = document.getElementById('pageHome') || document.querySelector('[id^="page"]');
+    var mainContainer = homePage ? homePage.parentElement : document.body;
+
     function makePage(id, title, subtitle){
       var div = document.createElement('div');
       div.id = id;
       div.style.cssText = 'display:none;padding:16px;max-width:600px;margin:0 auto;';
       div.innerHTML = '<h2 style="font-size:24px;margin:8px 0 4px;">'+title+'</h2><p style="color:#666;margin:0 0 14px;">'+subtitle+'</p>';
-      document.body.appendChild(div);
+      mainContainer.appendChild(div);
       return div;
     }
     var dp = makePage('pageDonors','👥 Donors / Sponsors','Naka-save sa Firestore');
@@ -302,7 +333,6 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
         <button id="addDonorBtn" style="width:100%;padding:12px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:800;">+ Add Donor</button>
       </div>
       <div id="donorList"><p style="color:#888;">Loading donors...</p></div>
-      <button onclick="document.querySelectorAll('[id^=page]').forEach(p=>p.style.display='none');var h=document.getElementById('pageHome');if(h)h.style.display='block';else location.reload();" style="margin-top:14px;width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;font-weight:700;">⬅ Back to Home</button>
     `;
     var pp = makePage('pagePledges','💰 Pledges / Pangako','Nangako - Bayad - Kulang');
     pp.innerHTML += `
@@ -313,69 +343,43 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
         <button id="addPledgeBtn" style="width:100%;padding:12px;background:#FFC107;color:#111;border:0;border-radius:10px;font-weight:800;">+ Add Pledge</button>
       </div>
       <div id="pledgeList"><p style="color:#888;">Loading pledges...</p></div>
-      <button onclick="document.querySelectorAll('[id^=page]').forEach(p=>p.style.display='none');var h=document.getElementById('pageHome');if(h)h.style.display='block';else location.reload();" style="margin-top:14px;width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;font-weight:700;">⬅ Back to Home</button>
     `;
 
-    // --- 3. FIRESTORE - HANAPIN KAHIT ANONG PANGALAN ---
+    // --- 4. FIRESTORE ---
     function getDb(){
       if(window.db) return window.db;
       if(window.firestore) return window.firestore;
-      if(window.firebase && window.firebase.firestore) { try{ return window.firebase.firestore(); }catch(e){} }
+      if(window.firebase && window.firebase.firestore){ try{ return window.firebase.firestore(); }catch(e){} }
       return null;
     }
     var db = getDb();
-    console.log('Firestore found?', !!db);
-
-    // Kung walang Firestore - gamitin muna localStorage para lumabas pa rin - pero sabihin sa user
     if(!db){
-      document.getElementById('donorList').innerHTML = '<p style="color:red;font-weight:700;">Hindi nakita Firestore DEN - picturan mo yung taas ng code mo - yung may firebaseConfig - para ma-connect ko ng tama. Pero yung buttons - nandyan na dapat.</p>';
-      document.getElementById('pledgeList').innerHTML = '<p style="color:red;font-weight:700;">Hindi nakita Firestore DEN - picturan mo yung taas ng code mo.</p>';
-      // Save pa rin sa localStorage habang hindi pa naka-connect
-      document.getElementById('addDonorBtn').onclick = function(){ alert('Hindi pa naka-connect sa Firestore DEN - picturan mo yung firebaseConfig mo sa taas ng code'); };
-      document.getElementById('addPledgeBtn').onclick = function(){ alert('Hindi pa naka-connect sa Firestore DEN - picturan mo yung firebaseConfig mo sa taas ng code'); };
+      document.getElementById('donorList').innerHTML = '<p style="color:red;">Hindi nakita Firestore - picturan mo firebaseConfig mo DEN.</p>';
+      document.getElementById('pledgeList').innerHTML = '<p style="color:red;">Hindi nakita Firestore - picturan mo firebaseConfig mo DEN.</p>';
       return;
     }
-
-    // --- FIRESTORE SAVE ---
     document.getElementById('addDonorBtn').onclick = async function(){
-      var n = document.getElementById('donorName').value.trim();
-      var a = Number(document.getElementById('donorAmt').value);
-      if(!n || !a) return alert('Lagyan mo pangalan at amount DEN');
-      try{
-        await db.collection('donors').add({name:n, amount:a, createdAt:new Date().toISOString()});
-        document.getElementById('donorName').value=''; document.getElementById('donorAmt').value='';
-        alert('Na-save sa Firestore DEN! ✅');
-      }catch(e){ alert('Hindi na-save: '+e.message); }
+      var n=document.getElementById('donorName').value.trim(); var a=Number(document.getElementById('donorAmt').value);
+      if(!n||!a) return alert('Lagyan mo pangalan at amount DEN');
+      try{ await db.collection('donors').add({name:n, amount:a, createdAt:new Date().toISOString()}); document.getElementById('donorName').value=''; document.getElementById('donorAmt').value=''; alert('Na-save sa Firestore DEN! ✅'); }catch(e){ alert('Hindi na-save: '+e.message); }
     };
     document.getElementById('addPledgeBtn').onclick = async function(){
-      var n = document.getElementById('pledgeName').value.trim();
-      var pr = Number(document.getElementById('pledgePromised').value);
-      var pd = Number(document.getElementById('pledgePaid').value||0);
-      if(!n || !pr) return alert('Lagyan mo pangalan at nangako DEN');
-      try{
-        await db.collection('pledges').add({name:n, promised:pr, paid:pd, createdAt:new Date().toISOString()});
-        document.getElementById('pledgeName').value=''; document.getElementById('pledgePromised').value=''; document.getElementById('pledgePaid').value='';
-        alert('Na-save sa Firestore DEN! ✅');
-      }catch(e){ alert('Hindi na-save: '+e.message); }
+      var n=document.getElementById('pledgeName').value.trim(); var pr=Number(document.getElementById('pledgePromised').value); var pd=Number(document.getElementById('pledgePaid').value||0);
+      if(!n||!pr) return alert('Lagyan mo pangalan at nangako DEN');
+      try{ await db.collection('pledges').add({name:n, promised:pr, paid:pd, createdAt:new Date().toISOString()}); document.getElementById('pledgeName').value=''; document.getElementById('pledgePromised').value=''; document.getElementById('pledgePaid').value=''; alert('Na-save sa Firestore DEN! ✅'); }catch(e){ alert('Hindi na-save: '+e.message); }
     };
-
-    // --- LISTEN ---
     db.collection('donors').orderBy('createdAt','desc').onSnapshot(function(snap){
-      var el = document.getElementById('donorList');
-      if(snap.empty){ el.innerHTML='<p style="color:#888;">Wala pang donor.</p>'; return; }
-      var total=0, html='';
-      snap.forEach(function(doc){ var x=doc.data(); total+=Number(x.amount||0); html+='<div style="background:#fff;padding:12px;border-radius:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><b>'+x.name+'</b><span>₱'+Number(x.amount).toLocaleString()+' <button onclick="window.delD(\''+doc.id+'\')" style="color:red;border:0;background:none;">✕</button></span></div>'; });
-      el.innerHTML = '<p style="font-weight:800;">Total Donors: ₱'+total.toLocaleString()+'</p>'+html;
+      var el=document.getElementById('donorList'); if(snap.empty){ el.innerHTML='<p style="color:#888;">Wala pang donor.</p>'; return; }
+      var total=0, html=''; snap.forEach(function(doc){ var x=doc.data(); total+=Number(x.amount||0); html+='<div style="background:#fff;padding:12px;border-radius:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><b>'+x.name+'</b><span>₱'+Number(x.amount).toLocaleString()+' <button onclick="window.delD(\''+doc.id+'\')" style="color:red;border:0;background:none;">✕</button></span></div>'; });
+      el.innerHTML='<p style="font-weight:800;">Total Donors: ₱'+total.toLocaleString()+'</p>'+html;
     });
     db.collection('pledges').orderBy('createdAt','desc').onSnapshot(function(snap){
-      var el = document.getElementById('pledgeList');
-      if(snap.empty){ el.innerHTML='<p style="color:#888;">Wala pang pledge.</p>'; return; }
-      var html='';
-      snap.forEach(function(doc){ var x=doc.data(); var kulang=Number(x.promised||0)-Number(x.paid||0); html+='<div style="background:#fff;padding:12px;border-radius:12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;"><b>'+x.name+'</b><span style="font-weight:800;color:'+(kulang<=0?'green':'red')+'">'+(kulang<=0?'✅ PAID':'Kulang ₱'+kulang.toLocaleString())+'</span></div><div style="font-size:13px;color:#666;">Nangako: ₱'+Number(x.promised).toLocaleString()+' • Bayad: ₱'+Number(x.paid).toLocaleString()+'</div><button onclick="window.delP(\''+doc.id+'\')" style="color:red;border:0;background:none;margin-top:4px;">Delete ✕</button></div>'; });
-      el.innerHTML = html;
+      var el=document.getElementById('pledgeList'); if(snap.empty){ el.innerHTML='<p style="color:#888;">Wala pang pledge.</p>'; return; }
+      var html=''; snap.forEach(function(doc){ var x=doc.data(); var kulang=Number(x.promised||0)-Number(x.paid||0); html+='<div style="background:#fff;padding:12px;border-radius:12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;"><b>'+x.name+'</b><span style="font-weight:800;color:'+(kulang<=0?'green':'red')+'">'+(kulang<=0?'✅ PAID':'Kulang ₱'+kulang.toLocaleString())+'</span></div><div style="font-size:13px;color:#666;">Nangako: ₱'+Number(x.promised).toLocaleString()+' • Bayad: ₱'+Number(x.paid).toLocaleString()+'</div><button onclick="window.delP(\''+doc.id+'\')" style="color:red;border:0;background:none;margin-top:4px;">Delete ✕</button></div>'; });
+      el.innerHTML=html;
     });
-    window.delD = function(id){ if(confirm('Burahin donor DEN?')) db.collection('donors').doc(id).delete(); };
-    window.delP = function(id){ if(confirm('Burahin pledge DEN?')) db.collection('pledges').doc(id).delete(); };
+    window.delD=function(id){ if(confirm('Burahin donor DEN?')) db.collection('donors').doc(id).delete(); };
+    window.delP=function(id){ if(confirm('Burahin pledge DEN?')) db.collection('pledges').doc(id).delete(); };
 
   }catch(e){ console.log('Donors error', e); }
 })();
