@@ -10,9 +10,15 @@
 @media(max-width:768px){ .sidebar{transform:translateX(-100%); position:fixed; z-index:50; height:100vh} .sidebar.open{transform:translateX(0)} .overlay.show{display:block} }
 .tab-btn.active{ background:#000; color:#fff; }
 .logo-circle{ object-fit:cover; border-radius:9999px; }
+.dark-mode{ background:#111827 !important; color:#fff !important; }
+.dark-mode .bg-white{ background:#1f2937 !important; color:#fff !important; }
+.dark-mode .bg-slate-100{ background:#111827 !important; }
+.dark-mode input, .dark-mode select{ background:#374151 !important; color:#fff !important; border-color:#4b5563 !important; }
+.dark-mode .text-slate-500, .dark-mode .text-slate-400{ color:#d1d5db !important; }
+.dark-mode .bg-yellow-50{ background:#3a2e00 !important; }
 </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-100 min-h-screen" id="mainBody">
 <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center p-4">
 <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
 <img src="logo.jpg" alt="Sto Nino" class="logo-circle w-28 h-28 mx-auto mb-3 border-4 border-yellow-400 shadow-lg">
@@ -44,14 +50,16 @@
 <button onclick="showTab('home')" id="btn-home" class="tab-btn active text-left px-3 py-3 rounded-xl font-bold mb-1">🏠 &nbsp;Home</button>
 <button onclick="showTab('monthly')" id="btn-monthly" class="tab-btn text-left px-3 py-3 rounded-xl font-bold mb-1">📊 &nbsp;Monthly Report</button>
 <button onclick="showTab('transactions')" id="btn-transactions" class="tab-btn text-left px-3 py-3 rounded-xl font-bold mb-1">📒 &nbsp;Transactions</button>
+<button onclick="showTab('audit')" id="btn-audit" class="tab-btn text-left px-3 py-3 rounded-xl font-bold mb-1">🕵️ &nbsp;Audit Log</button>
+<button onclick="toggleDarkMode()" id="darkBtn" class="text-left px-3 py-3 rounded-xl font-bold mb-1 bg-slate-100">🌙 &nbsp;Dark Mode: OFF</button>
 <div class="mt-auto">
 <div class="bg-slate-900 text-white rounded-xl p-3 mb-3"><p class="text-[11px] text-slate-300">TOTAL BALANCE</p><p id="sideBalance" class="font-bold text-lg">₱0</p></div>
 <button id="logoutBtn" class="w-full bg-red-500 text-white py-3 rounded-xl font-bold text-sm">Logout</button>
 <div class="flex justify-center gap-2 mt-4 text-[11px]"><button onclick="openPolicy('privacy')" class="text-blue-600 underline">Privacy</button><button onclick="openPolicy('terms')" class="text-blue-600 underline">Terms</button><button onclick="openPolicy('content')" class="text-blue-600 underline">Content</button></div>
 <p class="text-center text-[11px] text-slate-400 mt-2">© 2026 Stonino</p>
 </div>
-  </div>
-  <div class="flex-1 max-w-3xl mx-auto p-4 w-full">
+</div>
+<div class="flex-1 max-w-3xl mx-auto p-4 w-full">
 <button onclick="toggleSidebar()" class="md:hidden bg-white px-3 py-2 rounded-lg shadow font-bold mb-3">☰ Menu</button>
 
 <div id="tab-home">
@@ -112,10 +120,11 @@
 <div class="bg-slate-900 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-300">MONTH BALANCE</p><p id="monthBal" class="font-bold text-white">₱0</p></div>
 </div>
 <p id="monthLabel" class="text-xs text-slate-500 mb-3 text-center">Showing: All Records</p>
-<div class="grid grid-cols-2 gap-2">
+<div class="grid grid-cols-2 gap-2 mb-2">
 <button id="downloadCsv" class="bg-green-600 text-white py-3 rounded-xl font-bold text-sm">Download CSV / Excel</button>
 <button id="printReport" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Print / Save as PDF</button>
 </div>
+<button id="officialPdfBtn" class="w-full bg-yellow-500 text-black py-3 rounded-xl font-bold text-sm">📜 Official PDF Pang-Father - May Pirma</button>
 </div>
 <h2 class="font-bold mb-2">Records for this month</h2>
 <div id="monthlyList" class="space-y-2"></div>
@@ -138,6 +147,13 @@
 <div id="list" class="space-y-2"></div>
 </div>
 
+<div id="tab-audit" class="hidden">
+<h1 class="text-2xl font-bold mb-1">Audit Log</h1>
+<p class="text-sm text-slate-500 mb-3">Sino nag-Add / Edit / Delete - pang-protekta kay Father. Hindi mabubura.</p>
+<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-3 text-sm">Bawat Add, Edit, Delete - naka-log dito kasama oras at email. Pag may nagtanong si Father kung bakit nabago yung ₱600 - dito mo papakita.</div>
+<div id="auditList" class="space-y-2"></div>
+</div>
+
 </div>
 </div>
   </div>
@@ -147,7 +163,10 @@ const policies={privacy:{title:"Privacy Policy",body:"<p><b>Last updated: Nov 20
 function openPolicy(k){const p=policies[k];document.getElementById('policyTitle').textContent=p.title;document.getElementById('policyBody').innerHTML=p.body;document.getElementById('policyModal').classList.remove('hidden');}
 function closePolicy(){document.getElementById('policyModal').classList.add('hidden');}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');document.getElementById('overlay').classList.toggle('hidden');}
-function showTab(n){['home','monthly','transactions'].forEach(t=>{document.getElementById('tab-'+t).classList.add('hidden');document.getElementById('btn-'+t).classList.remove('active');});document.getElementById('tab-'+n).classList.remove('hidden');document.getElementById('btn-'+n).classList.add('active');if(window.innerWidth<768)toggleSidebar();window.scrollTo(0,0);}
+function showTab(n){['home','monthly','transactions','audit'].forEach(t=>{document.getElementById('tab-'+t).classList.add('hidden');document.getElementById('btn-'+t).classList.remove('active');});document.getElementById('tab-'+n).classList.remove('hidden');document.getElementById('btn-'+n).classList.add('active');if(window.innerWidth<768)toggleSidebar();window.scrollTo(0,0);}
+function toggleDarkMode(){const b=document.getElementById('mainBody');b.classList.toggle('dark-mode');const isDark=b.classList.contains('dark-mode');localStorage.setItem('stonino_dark',isDark?'1':'0');document.getElementById('darkBtn').textContent=isDark?'☀️  Dark Mode: ON':'🌙  Dark Mode: OFF';}
+function loadDarkMode(){if(localStorage.getItem('stonino_dark')==='1'){document.getElementById('mainBody').classList.add('dark-mode');document.getElementById('darkBtn').textContent='☀️  Dark Mode: ON';}}
+loadDarkMode();
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -156,21 +175,24 @@ import {getFirestore,collection,addDoc,onSnapshot,query,orderBy,deleteDoc,doc,se
 const firebaseConfig={apiKey:"AIzaSyCGRNaxVtedlBmf3UgHfIl06LDwXQdXxpg",authDomain:"stoninofinance-platform.firebaseapp.com",projectId:"stoninofinance-platform",storageBucket:"stoninofinance-platform.firebasestorage.app",messagingSenderId:"302507626314",appId:"1:302507626314:web:28749f1ef7035b38ea3bb3",measurementId:"G-R8KXLLBDL7"};
 const ADMIN_UID="4rBLfsIDFEOJHIGvPvcU8y6Kite2";
 const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getFirestore(app);
-let allRecords=[];let selectedMonth="";let editingId=null;let searchText="";let filterCat="";
+let allRecords=[];let allAudit=[];let selectedMonth="";let editingId=null;let searchText="";let filterCat="";
 const loginScreen=document.getElementById('loginScreen');const appScreen=document.getElementById('appScreen');const loginError=document.getElementById('loginError');
 document.getElementById('loginBtn').onclick=async()=>{const e=document.getElementById('email').value.trim();const p=document.getElementById('password').value;try{await signInWithEmailAndPassword(auth,e,p);}catch(err){loginError.textContent="Mali email/password: "+err.message;loginError.classList.remove('hidden');}};
 document.getElementById('logoutBtn').onclick=()=>signOut(auth);
-onAuthStateChanged(auth,(user)=>{if(!user){loginScreen.classList.remove('hidden');appScreen.classList.add('hidden');return;}if(user.uid!==ADMIN_UID){loginError.textContent="Access denied. Admin only.";loginError.classList.remove('hidden');signOut(auth);return;}document.getElementById('userEmail').textContent=user.email+" • Admin";loginScreen.classList.add('hidden');appScreen.classList.remove('hidden');loadData();loadBudget();});
+onAuthStateChanged(auth,(user)=>{if(!user){loginScreen.classList.remove('hidden');appScreen.classList.add('hidden');return;}if(user.uid!==ADMIN_UID){loginError.textContent="Access denied. Admin only.";loginError.classList.remove('hidden');signOut(auth);return;}document.getElementById('userEmail').textContent=user.email+" • Admin";loginScreen.classList.add('hidden');appScreen.classList.remove('hidden');loadData();loadAudit();loadBudget();});
 document.getElementById('date').valueAsDate=new Date();
 const now=new Date();document.getElementById('reportMonth').value=now.toISOString().slice(0,7);
 document.getElementById('reportMonth').addEventListener('change',(e)=>{selectedMonth=e.target.value;render();});
 document.getElementById('showAllBtn').onclick=()=>{selectedMonth="";document.getElementById('reportMonth').value="";render();};
 document.getElementById('searchInput').addEventListener('input',(e)=>{searchText=e.target.value.toLowerCase();render();});
 document.getElementById('filterCategory').addEventListener('change',(e)=>{filterCat=e.target.value;render();});
+async function saveAudit(action,detail){try{await addDoc(collection(db,"audit_logs"),{action,detail,by:auth.currentUser?auth.currentUser.email:"admin",at:serverTimestamp(),time:new Date().toLocaleString()});}catch(e){console.log("audit fail",e);}}
+function loadAudit(){const q=query(collection(db,"audit_logs"),orderBy("at","desc"));onSnapshot(q,(snap)=>{allAudit=[];snap.forEach(d=>{allAudit.push({id:d.id,...d.data()});});renderAudit();});}
+function renderAudit(){const el=document.getElementById('auditList');if(!allAudit.length){el.innerHTML="<p class='text-center text-slate-400'>Wala pang audit log. Pag nag-Add/Edit/Delete ka, lalabas dito.</p>";return;}el.innerHTML=allAudit.slice(0,100).map(a=>{let col=a.action.includes('DELETE')?'bg-red-50 border-red-200':a.action.includes('EDIT')?'bg-blue-50 border-blue-200':'bg-green-50 border-green-200';return `<div class="bg-white border ${col} rounded-xl p-3"><p class="font-bold text-sm">${a.action}</p><p class="text-sm">${a.detail||""}</p><p class="text-xs text-slate-400">${a.time||""} • ${a.by||""}</p></div>`;}).join("");}
 function loadBudget(){const t=localStorage.getItem('stonino_budget')||"";document.getElementById('budgetTarget').value=t;updateBudgetUI();}
 function updateBudgetUI(){const target=parseFloat(document.getElementById('budgetTarget').value)||parseFloat(localStorage.getItem('stonino_budget')||0)||0;let inc=0,out=0;allRecords.forEach(r=>{if(r.type==="income")inc+=r.amount;else out+=r.amount;});const bal=inc-out;if(!target){document.getElementById('budgetText').textContent="Wala pang target. Lagyan mo hal. 50000 para sa Fiesta.";document.getElementById('budgetBar').style.width="0%";document.getElementById('budgetPercent').textContent="0%";return;}const pct=Math.min(100,Math.round((bal/target)*100));const kulang=target-bal;document.getElementById('budgetText').textContent=`Target: ₱${target.toLocaleString()} • Naipon: ₱${bal.toLocaleString()} • ${kulang>0?"Kulang pa: ₱"+kulang.toLocaleString():"Target naabot na!"}`;document.getElementById('budgetBar').style.width=pct+"%";document.getElementById('budgetPercent').textContent=pct+"% naipon";}
 document.getElementById('saveBudgetBtn').onclick=()=>{const v=document.getElementById('budgetTarget').value;localStorage.setItem('stonino_budget',v);updateBudgetUI();alert("Target na-save!");};
-document.getElementById('addBtn').onclick=async()=>{const type=document.getElementById('type').value;const amount=parseFloat(document.getElementById('amount').value);const desc=document.getElementById('desc').value.trim();const date=document.getElementById('date').value;const category=document.getElementById('category').value;if(!amount||!desc)return alert("Lagyan mo amount at description");if(editingId){await updateDoc(doc(db,"finance_records",editingId),{type,amount,desc,date,category});editingId=null;document.getElementById('formTitle').textContent="+ Add New Record";document.getElementById('addBtn').textContent="+ Add Record";document.getElementById('cancelEditBtn').classList.add('hidden');alert("Na-edit na!");}else{await addDoc(collection(db,"finance_records"),{type,amount,desc,date,category,createdAt:serverTimestamp(),uid:auth.currentUser.uid});}document.getElementById('amount').value="";document.getElementById('desc').value="";};
+document.getElementById('addBtn').onclick=async()=>{const type=document.getElementById('type').value;const amount=parseFloat(document.getElementById('amount').value);const desc=document.getElementById('desc').value.trim();const date=document.getElementById('date').value;const category=document.getElementById('category').value;if(!amount||!desc)return alert("Lagyan mo amount at description");if(editingId){const old=allRecords.find(x=>x.id===editingId);await updateDoc(doc(db,"finance_records",editingId),{type,amount,desc,date,category});await saveAudit("EDIT RECORD",`Pinalitan: ${old?old.desc:""} ₱${old?old.amount:""} -> ${desc} ₱${amount} (${date})`);editingId=null;document.getElementById('formTitle').textContent="+ Add New Record";document.getElementById('addBtn').textContent="+ Add Record";document.getElementById('cancelEditBtn').classList.add('hidden');alert("Na-edit na!");}else{await addDoc(collection(db,"finance_records"),{type,amount,desc,date,category,createdAt:serverTimestamp(),uid:auth.currentUser.uid});await saveAudit("ADD RECORD",`${type==="income"?"Income":"Expense"}: ${desc} ₱${amount} - ${category} (${date})`);}document.getElementById('amount').value="";document.getElementById('desc').value="";};
 document.getElementById('cancelEditBtn').onclick=()=>{editingId=null;document.getElementById('formTitle').textContent="+ Add New Record";document.getElementById('addBtn').textContent="+ Add Record";document.getElementById('cancelEditBtn').classList.add('hidden');document.getElementById('amount').value="";document.getElementById('desc').value="";};
 function getFiltered(){if(!selectedMonth)return allRecords;return allRecords.filter(r=>(r.date||"").startsWith(selectedMonth));}
 function getSearchFiltered(){let list=allRecords;if(filterCat)list=list.filter(r=>(r.category||"Others")===filterCat);if(searchText)list=list.filter(r=>((r.desc||"")+" "+(r.category||"")+" "+(r.amount||"")+" "+(r.date||"")).toLowerCase().includes(searchText));return list;}
@@ -179,7 +201,8 @@ function render(){let inc=0,out=0;allRecords.forEach(r=>{if(r.type==="income")in
 function loadData(){const q=query(collection(db,"finance_records"),orderBy("createdAt","desc"));onSnapshot(q,(snap)=>{allRecords=[];snap.forEach(d=>{allRecords.push({id:d.id,...d.data()});});render();});}
 document.getElementById('downloadCsv').onclick=()=>{const filtered=getFiltered();if(filtered.length===0)return alert("Walang record sa buwan na to.");let csv="Date,Type,Category,Description,Amount\n";filtered.forEach(r=>{csv+=`"${r.date}","${r.type}","${r.category||"Others"}","${(r.desc||"").replace(/"/g,'')}",${r.amount}\n`;});let mIn=0,mOut=0;filtered.forEach(r=>{if(r.type==="income")mIn+=r.amount;else mOut+=r.amount;});csv+=`\nTotal Income,${mIn}\nTotal Expense,${mOut}\nBalance,${mIn-mOut}\n`;const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`Stonino-Report-${selectedMonth||"All-Time"}.csv`;a.click();};
 document.getElementById('printReport').onclick=()=>{const filtered=getFiltered();let mIn=0,mOut=0;filtered.forEach(r=>{if(r.type==="income")mIn+=r.amount;else mOut+=r.amount;});const w=window.open("","_blank");let rows=filtered.map(r=>`<tr><td style="padding:8px;border:1px solid #ddd">${r.date}</td><td style="padding:8px;border:1px solid #ddd">${r.type}</td><td style="padding:8px;border:1px solid #ddd">${r.category||"Others"}</td><td style="padding:8px;border:1px solid #ddd">${r.desc}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₱${r.amount.toLocaleString()}</td></tr>`).join("");w.document.write(`<html><head><title>Stonino Report ${selectedMonth||"All"}</title></head><body style="font-family:sans-serif;padding:20px"><h1>Stonino Online Ledger</h1><h2>Monthly Report: ${selectedMonth||"All Records"}</h2><p>Income: ₱${mIn.toLocaleString()} | Expense: ₱${mOut.toLocaleString()} | Balance: ₱${(mIn-mOut).toLocaleString()}</p><table style="width:100%;border-collapse:collapse"><tr><th style="padding:8px;border:1px solid #ddd;text-align:left">Date</th><th style="padding:8px;border:1px solid #ddd;text-align:left">Type</th><th style="padding:8px;border:1px solid #ddd;text-align:left">Category</th><th style="padding:8px;border:1px solid #ddd;text-align:left">Description</th><th style="padding:8px;border:1px solid #ddd;text-align:right">Amount</th></tr>${rows}</table><p style="margin-top:20px;font-size:12px;color:#888">Generated: ${new Date().toLocaleString()} • Admin: finance@stonino.com</p><script>window.print()<\/script></body></html>`);w.document.close();};
-window.delRec=async(id)=>{if(confirm("Delete?"))await deleteDoc(doc(db,"finance_records",id));};
+document.getElementById('officialPdfBtn').onclick=()=>{const filtered=getFiltered();if(filtered.length===0)return alert("Walang record sa buwan na to.");let mIn=0,mOut=0;filtered.forEach(r=>{if(r.type==="income")mIn+=r.amount;else mOut+=r.amount;});const w=window.open("","_blank");let rows=filtered.map((r,i)=>`<tr><td style="padding:10px;border:1px solid #333;text-align:center">${i+1}</td><td style="padding:10px;border:1px solid #333">${r.date}</td><td style="padding:10px;border:1px solid #333">${r.category||"Others"}</td><td style="padding:10px;border:1px solid #333">${r.desc}</td><td style="padding:10px;border:1px solid #333;text-align:right">₱${r.amount.toLocaleString()}</td></tr>`).join("");w.document.write(`<html><head><title>Official Report - Stonino</title></head><body style="font-family:serif;padding:40px;max-width:800px;margin:auto"><div style="text-align:center;border-bottom:3px double #000;padding-bottom:15px"><h1 style="margin:0;font-size:28px">STO. NINO CHAPEL</h1><p style="margin:5px 0">Finance Report • Online Ledger</p><h2 style="margin:10px 0 0">OFFICIAL FINANCIAL REPORT</h2><p style="margin:5px 0">Period: ${selectedMonth||"All Records"} • Date Generated: ${new Date().toLocaleDateString()}</p></div><div style="display:flex;justify-content:space-between;margin:20px 0;background:#f5f5f5;padding:15px"><div><b>Total Income:</b><br><span style="color:green;font-size:18px">₱${mIn.toLocaleString()}</span></div><div><b>Total Expense:</b><br><span style="color:red;font-size:18px">₱${mOut.toLocaleString()}</span></div><div><b>Balance:</b><br><span style="font-size:18px">₱${(mIn-mOut).toLocaleString()}</span></div></div><table style="width:100%;border-collapse:collapse"><tr><th style="padding:10px;border:1px solid #333;background:#000;color:#fff">#</th><th style="padding:10px;border:1px solid #333;background:#000;color:#fff">Date</th><th style="padding:10px;border:1px solid #333;background:#000;color:#fff">Category</th><th style="padding:10px;border:1px solid #333;background:#000;color:#fff">Description</th><th style="padding:10px;border:1px solid #333;background:#000;color:#fff">Amount</th></tr>${rows}</table><p style="margin-top:20px;font-size:13px">This report is generated from Stonino Online Ledger and is certified true and correct based on records entered.</p><div style="display:flex;justify-content:space-between;margin-top:60px"><div style="text-align:center"><p style="border-top:1px solid #000;padding-top:5px;width:200px;margin:0 auto">Prepared By<br><b>Admin / Treasurer</b><br><span style="font-size:12px">finance@stonino.com</span></p></div><div style="text-align:center"><p style="border-top:1px solid #000;padding-top:5px;width:200px;margin:0 auto">Noted By<br><b>Parish Priest / Father</b><br><span style="font-size:12px">Signature over printed name</span></p></div></div><p style="text-align:center;font-size:11px;color:#888;margin-top:40px">© 2026 Stonino Online Ledger • Generated ${new Date().toLocaleString()}</p><script>window.print()<\/script></body></html>`);w.document.close();};
+window.delRec=async(id)=>{const r=allRecords.find(x=>x.id===id);if(confirm("Delete?")){await deleteDoc(doc(db,"finance_records",id));await saveAudit("DELETE RECORD",`Binura: ${r?r.desc:""} ₱${r?r.amount:""} (${r?r.date:""})`);}};
 window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editingId=id;document.getElementById('type').value=r.type;document.getElementById('amount').value=r.amount;document.getElementById('desc').value=r.desc;document.getElementById('date').value=r.date;document.getElementById('category').value=r.category||"Others";document.getElementById('formTitle').textContent="Edit Record - "+r.desc;document.getElementById('addBtn').textContent="Save Edit";document.getElementById('cancelEditBtn').classList.remove('hidden');showTab('home');window.scrollTo(0,0);};
 </script>
 </body>
