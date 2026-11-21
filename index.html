@@ -441,6 +441,58 @@ async function startAll(){
 startAll();
 </script>
 </script>
+<!-- FIX SIDEBAR PUTOL V2 - DEN - paste bago </body> -->
+<style>
+/* Sidebar mismo - gawing flex para hindi magsiksikan */
+div[class*="sidebar"], div[class*="Sidebar"], aside, nav{
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-top: 16px !important;
+  padding-bottom: 30px !important;
+  box-sizing: border-box !important;
+}
 
+/* Email pill sa taas - yung putol sa kaliwa */
+div[class*="sidebar"] div:first-child,
+div[class*="sidebar"] p,
+div[class*="sidebar"] span{
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Yung mismong email - paliitin at balutin, wag putulin */
+div[class*="sidebar"] *{
+  word-break: break-all !important;
+}
+
+/* Yung email na may finance@ - gawing 2 lines kung kailangan */
+div[class*="sidebar"] div[style*="background"]{
+  padding: 8px 10px !important;
+  font-size: 11px !important;
+  white-space: normal !important;
+  line-height: 1.3 !important;
+  text-align: left !important;
+}
+
+/* Footer sa baba - Privacy Terms Contact - wag itago */
+div[class*="sidebar"] > div:last-child{
+  font-size: 11px !important;
+  padding-bottom: 10px !important;
+  white-space: normal !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Logout - wag dikit sa footer */
+div[class*="sidebar"] button:last-of-type{
+  margin-bottom: 14px !important;
+}
+</style>
 </body>
 </html>
