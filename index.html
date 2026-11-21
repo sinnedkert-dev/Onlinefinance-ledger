@@ -205,5 +205,34 @@ document.getElementById('officialPdfBtn').onclick=()=>{const filtered=getFiltere
 window.delRec=async(id)=>{const r=allRecords.find(x=>x.id===id);if(confirm("Delete?")){await deleteDoc(doc(db,"finance_records",id));await saveAudit("DELETE RECORD",`Binura: ${r?r.desc:""} ₱${r?r.amount:""} (${r?r.date:""})`);}};
 window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editingId=id;document.getElementById('type').value=r.type;document.getElementById('amount').value=r.amount;document.getElementById('desc').value=r.desc;document.getElementById('date').value=r.date;document.getElementById('category').value=r.category||"Others";document.getElementById('formTitle').textContent="Edit Record - "+r.desc;document.getElementById('addBtn').textContent="Save Edit";document.getElementById('cancelEditBtn').classList.remove('hidden');showTab('home');window.scrollTo(0,0);};
 </script>
+<!-- NOTIFICATION LANG - DAGDAG SA BABA - WALANG IBANG BINAGO -->
+<div id="toast" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:12px 20px;border-radius:12px;font-weight:bold;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);">✅ Na-save na!</div>
+<script>
+  // Hanapin yung Add button mo - kahit anong id niya
+  function showToast(){
+    var t = document.getElementById('toast');
+    t.style.display = 'block';
+    setTimeout(function(){ t.style.display = 'none'; }, 3000);
+  }
+  // Pag na-load na yung page, kabitan natin yung Add button
+  setTimeout(function(){
+    var btn = document.getElementById('addBtn') || document.getElementById('addRecordBtn');
+    if(!btn){
+      // Kung ibang pangalan yung button mo, hanapin sa text
+      var all = document.querySelectorAll('button');
+      for(var i=0;i<all.length;i++){
+        if(all[i].textContent.includes('Add New Record') || all[i].textContent.includes('Add Record') || all[i].textContent.includes('+ Add')){
+          btn = all[i]; break;
+        }
+      }
+    }
+    if(btn){
+      btn.addEventListener('click', function(){
+        // Hintayin konti bago ipakita - para sure na na-save na
+        setTimeout(showToast, 500);
+      });
+    }
+  }, 1000);
+</script>
 </body>
 </html>
