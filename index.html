@@ -441,5 +441,43 @@ async function startAll(){
 startAll();
 </script>
 </script>
+<!-- ADD SA BABA - DEN - Floating Button -->
+<style>
+#fabAdd{
+  position: fixed !important;
+  bottom: 18px !important;
+  left: 16px !important;
+  right: 16px !important;
+  width: calc(100% - 32px) !important;
+  padding: 16px !important;
+  background: #FFC107 !important;
+  color: #111 !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25) !important;
+  z-index: 9999 !important;
+  cursor: pointer !important;
+}
+body{ padding-bottom: 90px !important; }
+</style>
+
+<button id="fabAdd" onclick="goAdd()">＋ Add New Record</button>
+
+<script>
+function goAdd(){
+  // Hanapin yung Add form mo - kahit anong pangalan nya
+  var el = document.querySelector('#addForm, #addRecord, [id*="Add"], [id*="add"]');
+  if(el){
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+    var firstInput = el.querySelector('input, select');
+    if(firstInput) setTimeout(()=> firstInput.focus(), 500);
+  } else {
+    // Kung wala - scroll sa taas - nandun yung Add mo
+    window.scrollTo({top: 0, behavior:'smooth'});
+  }
+}
+</script>
 </body>
 </html>
