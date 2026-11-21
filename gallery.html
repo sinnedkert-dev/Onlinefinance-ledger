@@ -7,7 +7,8 @@
 <style>
 *{box-sizing:border-box} body{margin:0;font-family:Arial;background:#FFF8E7;padding:16px;padding-bottom:80px}
 h1{font-size:26px;margin:8px 0 4px} p{color:#666;margin:0 0 14px}
-#search{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:12px}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:10px;box-sizing:border-box}
+#search{margin-bottom:12px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .card{background:#fff;padding:10px;border-radius:12px}
 .card img{width:100%;height:150px;object-fit:cover;border-radius:10px;cursor:pointer}
@@ -15,25 +16,42 @@ h1{font-size:26px;margin:8px 0 4px} p{color:#666;margin:0 0 14px}
 .card small{color:#666}
 .card button{width:100%;padding:10px;margin-top:8px;border:0;border-radius:8px;font-weight:800;cursor:pointer}
 .btn-view{background:#111;color:#fff} .btn-dl{background:#FFC107;color:#111}
+.btn-login{background:#111;color:#fff;padding:12px;border:0;border-radius:10px;font-weight:800;width:100%;cursor:pointer}
 #viewer{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
 #viewer img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:12px;background:#fff}
 #viewer button{background:#fff;color:#111;border:0;padding:10px 16px;border-radius:10px;font-weight:800;margin-bottom:10px;align-self:flex-end}
 </style>
 </head>
 <body>
+
+<!-- LOGIN - same sa main app mo - same rules -->
+<div id="loginBox">
 <h1>🧾 Gallery Receipts - Backup</h1>
-<p>Diretso sa Firestore - kahit down ang main website, makikita mo pa rin dito.</p>
+<p>Login ka muna DEN - same sa main app mo - para same sa Firestore Rules.</p>
+<input id="email" value="finance@stonino.com" type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password mo - ikaw mag-type">
+<button class="btn-login" onclick="doLogin()">Login</button>
+<p id="loginMsg" style="color:red;margin-top:10px;"></p>
+<p style="font-size:12px;">Hindi naka-save password mo dito DEN - ikaw lang magta-type pag bubuksan mo.</p>
+</div>
+
+<!-- GALLERY - lalabas lang pag naka-login -->
+<div id="galleryBox" style="display:none;">
+<h1>🧾 Gallery Receipts - Backup</h1>
+<p>Diretso sa Firestore - kahit down ang main website, makikita mo pa rin dito.<br><span id="who"></span></p>
 <input id="search" placeholder="Hanapin - ex: Kapitan, Mario, 350...">
 <div id="count" style="font-weight:800;margin-bottom:10px;">Loading...</div>
 <div id="list" class="grid"></div>
+<button onclick="doLogout()" style="width:100%;padding:12px;background:#fff;border:1px solid #ddd;border-radius:10px;font-weight:800;margin-top:14px;">Logout</button>
+</div>
 
 <div id="viewer"><button onclick="document.getElementById('viewer').style.display='none'">✕ Close</button><img id="viewerImg"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Stonino Finance - DEN - naka-config na - wag baguhin
 const firebaseConfig = {
   apiKey: "AIzaSyCGRNaxVtedlBmf3UgHfIl06LDwXQdXxpg",
   authDomain: "stoninofinance-platform.firebaseapp.com",
@@ -46,6 +64,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 let all = [];
 function render(){
@@ -74,10 +93,34 @@ window.dlImg = function(i){
 document.getElementById('search').oninput = render;
 document.getElementById('viewer').onclick = (e)=>{ if(e.target.id==='viewer') e.target.style.display='none'; };
 
-onSnapshot(query(collection(db,'receipts'), orderBy('createdAt','desc')), (snap)=>{
-  all = []; snap.forEach(d=> all.push(d.data()));
-  render();
-}, (err)=>{ document.getElementById('count').textContent = 'Hindi ma-connect sa Firestore DEN: '+err.message; });
+window.doLogin = async function(){
+  var email = document.getElementById('email').value.trim();
+  var pass = document.getElementById('password').value;
+  if(!email || !pass){ document.getElementById('loginMsg').textContent = 'Lagyan mo email at password DEN'; return; }
+  document.getElementById('loginMsg').textContent = 'Logging in...';
+  try{ await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e){ document.getElementById('loginMsg').textContent = 'Hindi naka-login DEN: ' + e.message; }
+};
+window.doLogout = async function(){ await signOut(auth); };
+
+function loadGallery(){
+  onSnapshot(query(collection(db,'receipts'), orderBy('createdAt','desc')), (snap)=>{
+    all = []; snap.forEach(d=> all.push(d.data()));
+    render();
+  }, (err)=>{ document.getElementById('count').textContent = 'Hindi ma-connect DEN: '+err.message; });
+}
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('galleryBox').style.display='block';
+    document.getElementById('who').textContent = 'Naka-login: ' + user.email;
+    loadGallery();
+  } else {
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('galleryBox').style.display='none';
+  }
+});
 </script>
 </body>
   </html>
