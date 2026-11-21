@@ -151,7 +151,7 @@
 <div id="tab-audit" class="hidden">
 <h1 class="text-2xl font-bold mb-1">Audit Log</h1>
 <p class="text-sm text-slate-500 mb-3">Sino nag-Add / Edit / Delete - pang-protekta kay Father. Nasa Firestore din.</p>
-<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-3 text-sm">Bawat Add, Edit, Delete - naka-log dito kasama oras at email. Pag may nagtanong si Father kung bakit nabago yung ₱600 - dito mo papakita.</div>
+<div </div>
 <div id="auditList" class="space-y-2"></div>
 </div>
 
@@ -234,19 +234,6 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
     }
   }, 1000);
 </script>
-<!-- HIDE 1 BOX LANG - YUNG BAWAT ADD LANG -->
-<script>
-setTimeout(function(){
-  var boxes = document.querySelectorAll('div');
-  for(var i=0;i<boxes.length;i++){
-    var txt = boxes[i].textContent || '';
-    // Yung maliit na box lang - yung may Bawat Add at maikli lang
-    // Hindi yung malaking parent na may kasamang ADD RECORD
-    if(txt.includes('Bawat Add, Edit, Delete') && txt.length < 300){
-      boxes[i].style.display = 'none';
-    }
-  }
-}, 800);
-      </script>
+
 </body>
 </html>
