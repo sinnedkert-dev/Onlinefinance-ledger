@@ -5,8 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stonino Online Ledger</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+.sidebar{transition:transform .25s ease}
+@media(max-width:768px){ .sidebar{transform:translateX(-100%); position:fixed; z-index:50; height:100vh} .sidebar.open{transform:translateX(0)} .overlay.show{display:block} }
+.tab-btn.active{ background:#000; color:#fff; }
+</style>
 </head>
 <body class="bg-slate-100 min-h-screen">
+<!-- LOGIN -->
 <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
     <div class="text-4xl mb-3">📒</div>
@@ -24,50 +30,90 @@
   </div>
 </div>
 
-<div id="appScreen" class="hidden max-w-3xl mx-auto p-4">
-  <div class="flex justify-between items-center mb-4"><div><h1 class="text-2xl font-bold">Stonino Ledger</h1><p id="userEmail" class="text-sm text-slate-500"></p></div><button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Logout</button></div>
-
-  <!-- TOTAL ALL TIME -->
-  <div class="grid grid-cols-3 gap-3 mb-4">
-    <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL INCOME</p><p id="totalIn" class="font-bold text-green-600 text-lg">₱0</p></div>
-    <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL EXPENSE</p><p id="totalOut" class="font-bold text-red-600 text-lg">₱0</p></div>
-    <div class="bg-black rounded-xl p-4 text-center"><p class="text-xs text-slate-300">TOTAL BALANCE</p><p id="balance" class="font-bold text-white text-lg">₱0</p></div>
-  </div>
-
-  <!-- ADD -->
-  <div class="bg-white rounded-xl p-4 mb-4">
-    <div class="grid grid-cols-2 gap-2 mb-2"><select id="type" class="border rounded-lg p-3"><option value="income">Income +</option><option value="expense">Expense -</option></select><input id="amount" type="number" placeholder="Amount ₱" class="border rounded-lg p-3"></div>
-    <input id="desc" placeholder="Description - hal. Offering, Kuryente" class="w-full border rounded-lg p-3 mb-2">
-    <input id="date" type="date" class="w-full border rounded-lg p-3 mb-3">
-    <button id="addBtn" class="w-full bg-black text-white py-3 rounded-xl font-bold">+ Add Record</button>
-  </div>
-
-  <!-- MONTHLY REPORT -->
-  <div class="bg-white rounded-xl p-4 mb-4 border-2 border-black">
-    <h2 class="font-bold text-lg mb-1">📊 Monthly Report</h2>
-    <p class="text-xs text-slate-500 mb-3">Pili ka ng buwan, makikita mo summary + pwede mo i-download.</p>
-    <div class="flex gap-2 mb-3">
-      <input id="reportMonth" type="month" class="flex-1 border rounded-lg p-3">
-      <button id="showAllBtn" class="bg-slate-200 px-4 rounded-lg text-sm font-bold">All</button>
+<!-- APP -->
+<div id="appScreen" class="hidden">
+  <div id="overlay" onclick="toggleSidebar()" class="overlay hidden fixed inset-0 bg-black/50 z-40"></div>
+  <div class="flex">
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="sidebar w-[260px] shrink-0 bg-white min-h-screen p-4 shadow-xl flex flex-col">
+      <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold leading-none">📒 Stonino</h1><p class="text-xs text-slate-400">Online Ledger</p></div>
+        <button onclick="toggleSidebar()" class="md:hidden text-2xl">×</button>
+      </div>
+      <p id="userEmail" class="text-xs text-slate-500 bg-slate-100 rounded-lg p-2 mb-4 truncate"></p>
+      <p class="text-[11px] font-bold text-slate-400 mb-2 tracking-widest">MENU</p>
+      <button onclick="showTab('home')" id="btn-home" class="tab-btn active text-left px-3 py-3 rounded-xl font-bold mb-1">🏠 &nbsp;Home</button>
+      <button onclick="showTab('monthly')" id="btn-monthly" class="tab-btn text-left px-3 py-3 rounded-xl font-bold mb-1">📊 &nbsp;Monthly Report</button>
+      <button onclick="showTab('transactions')" id="btn-transactions" class="tab-btn text-left px-3 py-3 rounded-xl font-bold mb-1">📒 &nbsp;Transactions</button>
+      <div class="mt-auto">
+        <div class="bg-slate-900 text-white rounded-xl p-3 mb-3"><p class="text-[11px] text-slate-300">TOTAL BALANCE</p><p id="sideBalance" class="font-bold text-lg">₱0</p></div>
+        <button id="logoutBtn" class="w-full bg-red-500 text-white py-3 rounded-xl font-bold text-sm">🚪 Logout</button>
+        <div class="flex justify-center gap-2 mt-4 text-[11px]"><button onclick="openPolicy('privacy')" class="text-blue-600 underline">Privacy</button><button onclick="openPolicy('terms')" class="text-blue-600 underline">Terms</button><button onclick="openPolicy('content')" class="text-blue-600 underline">Content</button></div>
+        <p class="text-center text-[11px] text-slate-400 mt-2">© 2026 Stonino</p>
+      </div>
     </div>
-    <div class="grid grid-cols-3 gap-2 mb-3">
-      <div class="bg-green-50 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-500">MONTH INCOME</p><p id="monthIn" class="font-bold text-green-600">₱0</p></div>
-      <div class="bg-red-50 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-500">MONTH EXPENSE</p><p id="monthOut" class="font-bold text-red-600">₱0</p></div>
-      <div class="bg-slate-900 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-300">MONTH BALANCE</p><p id="monthBal" class="font-bold text-white">₱0</p></div>
-    </div>
-    <p id="monthLabel" class="text-xs text-slate-500 mb-3 text-center">Showing: All Records</p>
-    <div class="grid grid-cols-2 gap-2">
-      <button id="downloadCsv" class="bg-green-600 text-white py-3 rounded-xl font-bold text-sm">⬇ Download CSV / Excel</button>
-      <button id="printReport" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">🖨 Print / Save as PDF</button>
-    </div>
-    <p class="text-[11px] text-slate-400 mt-2 text-center">CSV = pang Excel. Print = piliin mo Save as PDF para pang-report.</p>
-  </div>
 
-  <div id="list" class="space-y-2"></div>
-  <div class="text-center mt-8 pb-6"><p class="text-xs text-slate-400">© 2026 Stonino Online Ledger</p><div class="flex justify-center gap-3 mt-2 text-xs"><button onclick="openPolicy('privacy')" class="text-blue-600 underline">Privacy Policy</button><button onclick="openPolicy('terms')" class="text-blue-600 underline">Terms</button><button onclick="openPolicy('content')" class="text-blue-600 underline">Content Policy</button></div></div>
+    <!-- MAIN -->
+    <div class="flex-1 max-w-3xl mx-auto p-4 w-full">
+      <button onclick="toggleSidebar()" class="md:hidden bg-white px-3 py-2 rounded-lg shadow font-bold mb-3">☰ Menu</button>
+
+      <!-- HOME TAB -->
+      <div id="tab-home">
+        <h1 class="text-2xl font-bold mb-1">Home</h1>
+        <p class="text-sm text-slate-500 mb-4">Mabilis na overview + Add Record</p>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL INCOME</p><p id="totalIn" class="font-bold text-green-600 text-lg">₱0</p></div>
+          <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL EXPENSE</p><p id="totalOut" class="font-bold text-red-600 text-lg">₱0</p></div>
+          <div class="bg-black rounded-xl p-4 text-center"><p class="text-xs text-slate-300">BALANCE</p><p id="balance" class="font-bold text-white text-lg">₱0</p></div>
+        </div>
+        <div class="bg-white rounded-xl p-4 mb-4">
+          <h2 class="font-bold mb-3">+ Add New Record</h2>
+          <div class="grid grid-cols-2 gap-2 mb-2"><select id="type" class="border rounded-lg p-3"><option value="income">Income +</option><option value="expense">Expense -</option></select><input id="amount" type="number" placeholder="Amount ₱" class="border rounded-lg p-3"></div>
+          <input id="desc" placeholder="Description - hal. Offering, Kuryente" class="w-full border rounded-lg p-3 mb-2">
+          <input id="date" type="date" class="w-full border rounded-lg p-3 mb-3">
+          <button id="addBtn" class="w-full bg-black text-white py-3 rounded-xl font-bold">+ Add Record</button>
+        </div>
+        <h2 class="font-bold mb-2">Recent Transactions</h2>
+        <div id="recentList" class="space-y-2"></div>
+        <button onclick="showTab('transactions')" class="w-full mt-3 bg-white py-3 rounded-xl font-bold text-sm">View All Transactions →</button>
+      </div>
+
+      <!-- MONTHLY TAB -->
+      <div id="tab-monthly" class="hidden">
+        <h1 class="text-2xl font-bold mb-1">📊 Monthly Report</h1>
+        <p class="text-sm text-slate-500 mb-4">Pili ka ng buwan, makikita mo summary + download.</p>
+        <div class="bg-white rounded-xl p-4 mb-4">
+          <div class="flex gap-2 mb-3">
+            <input id="reportMonth" type="month" class="flex-1 border rounded-lg p-3">
+            <button id="showAllBtn" class="bg-slate-200 px-4 rounded-lg text-sm font-bold">All</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="bg-green-50 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-500">MONTH INCOME</p><p id="monthIn" class="font-bold text-green-600">₱0</p></div>
+            <div class="bg-red-50 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-500">MONTH EXPENSE</p><p id="monthOut" class="font-bold text-red-600">₱0</p></div>
+            <div class="bg-slate-900 rounded-lg p-3 text-center"><p class="text-[11px] text-slate-300">MONTH BALANCE</p><p id="monthBal" class="font-bold text-white">₱0</p></div>
+          </div>
+          <p id="monthLabel" class="text-xs text-slate-500 mb-3 text-center">Showing: All Records</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="downloadCsv" class="bg-green-600 text-white py-3 rounded-xl font-bold text-sm">⬇ Download CSV / Excel</button>
+            <button id="printReport" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">🖨 Print / Save as PDF</button>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2 text-center">CSV = pang Excel. Print = piliin mo Save as PDF.</p>
+        </div>
+        <h2 class="font-bold mb-2">Records for this month</h2>
+        <div id="monthlyList" class="space-y-2"></div>
+      </div>
+
+      <!-- TRANSACTIONS TAB -->
+      <div id="tab-transactions" class="hidden">
+        <h1 class="text-2xl font-bold mb-1">📒 Transactions</h1>
+        <p class="text-sm text-slate-500 mb-4">Lahat ng records mo.</p>
+        <div id="list" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="policyModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6"><div class="flex justify-between"><h2 id="policyTitle" class="text-xl font-bold mb-3"></h2><button onclick="closePolicy()" class="text-2xl">×</button></div><div id="policyBody" class="text-sm text-slate-600 space-y-3"></div><button onclick="closePolicy()" class="w-full bg-black text-white py-3 rounded-xl font-bold mt-5">Close</button></div></div>
+<div id="policyModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[60]"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6"><div class="flex justify-between"><h2 id="policyTitle" class="text-xl font-bold mb-3"></h2><button onclick="closePolicy()" class="text-2xl">×</button></div><div id="policyBody" class="text-sm text-slate-600 space-y-3"></div><button onclick="closePolicy()" class="w-full bg-black text-white py-3 rounded-xl font-bold mt-5">Close</button></div></div>
 <script>
 const policies = {
   privacy: { title: "Privacy Policy", body: `<p><b>Last updated: Nov 20, 2026</b></p><p>Private admin-only finance tool. We collect only email, UID, and finance records you enter. We do NOT sell or share data. Stored securely in Firebase Firestore.</p>` },
@@ -76,6 +122,14 @@ const policies = {
 };
 function openPolicy(k){ const p=policies[k]; document.getElementById('policyTitle').textContent=p.title; document.getElementById('policyBody').innerHTML=p.body; document.getElementById('policyModal').classList.remove('hidden'); }
 function closePolicy(){ document.getElementById('policyModal').classList.add('hidden'); }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); document.getElementById('overlay').classList.toggle('hidden'); }
+function showTab(name){
+  ['home','monthly','transactions'].forEach(t=>{ document.getElementById('tab-'+t).classList.add('hidden'); document.getElementById('btn-'+t).classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  document.getElementById('btn-'+name).classList.add('active');
+  if(window.innerWidth<768) toggleSidebar();
+  window.scrollTo(0,0);
+}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -129,21 +183,24 @@ function getFiltered(){
   if(!selectedMonth) return allRecords;
   return allRecords.filter(r => (r.date||"").startsWith(selectedMonth));
 }
+function card(r){
+  return `<div class="bg-white rounded-xl p-3 flex justify-between items-center"><div><p class="font-bold">${r.desc}</p><p class="text-xs text-slate-400">${r.date || ""} • ${r.type}</p></div><div class="flex items-center gap-3"><b class="${r.type==="income"?"text-green-600":"text-red-600"}">${r.type==="income"?"+":"-"}₱${r.amount.toLocaleString()}</b><button onclick="window.delRec('${r.id}')" class="text-red-500 text-xs">Delete</button></div></div>`;
+}
 function render(){
   let inc=0, out=0; allRecords.forEach(r=>{ if(r.type==="income") inc+=r.amount; else out+=r.amount; });
   document.getElementById('totalIn').textContent = "₱"+inc.toLocaleString();
   document.getElementById('totalOut').textContent = "₱"+out.toLocaleString();
   document.getElementById('balance').textContent = "₱"+(inc-out).toLocaleString();
+  document.getElementById('sideBalance').textContent = "₱"+(inc-out).toLocaleString();
   const filtered = getFiltered();
   let mIn=0, mOut=0; filtered.forEach(r=>{ if(r.type==="income") mIn+=r.amount; else mOut+=r.amount; });
   document.getElementById('monthIn').textContent = "₱"+mIn.toLocaleString();
   document.getElementById('monthOut').textContent = "₱"+mOut.toLocaleString();
   document.getElementById('monthBal').textContent = "₱"+(mIn-mOut).toLocaleString();
   document.getElementById('monthLabel').textContent = selectedMonth ? "Showing: " + selectedMonth + " • " + filtered.length + " records" : "Showing: All Records • " + filtered.length + " records";
-  let html=""; filtered.forEach(r=>{
-    html += `<div class="bg-white rounded-xl p-3 flex justify-between items-center"><div><p class="font-bold">${r.desc}</p><p class="text-xs text-slate-400">${r.date || ""} • ${r.type}</p></div><div class="flex items-center gap-3"><b class="${r.type==="income"?"text-green-600":"text-red-600"}">${r.type==="income"?"+":"-"}₱${r.amount.toLocaleString()}</b><button onclick="window.delRec('${r.id}')" class="text-red-500 text-xs">Delete</button></div></div>`;
-  });
-  document.getElementById('list').innerHTML = html || "<p class='text-center text-slate-400'>Walang record sa buwan na to.</p>";
+  document.getElementById('list').innerHTML = allRecords.map(card).join("") || "<p class='text-center text-slate-400'>Walang record pa.</p>";
+  document.getElementById('monthlyList').innerHTML = filtered.map(card).join("") || "<p class='text-center text-slate-400'>Walang record sa buwan na to.</p>";
+  document.getElementById('recentList').innerHTML = allRecords.slice(0,5).map(card).join("") || "<p class='text-center text-slate-400'>Walang record pa.</p>";
 }
 function loadData(){
   const q = query(collection(db, "finance_records"), orderBy("createdAt", "desc"));
@@ -174,4 +231,4 @@ document.getElementById('printReport').onclick = ()=>{
 window.delRec = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"finance_records",id)); };
 </script>
 </body>
-                                                                                                                                                                                                                                </html>
+                                                     </html>
