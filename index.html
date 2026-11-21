@@ -234,6 +234,19 @@ window.editRec=(id)=>{const r=allRecords.find(x=>x.id===id);if(!r)return;editing
     }
   }, 1000);
 </script>
-
+<!-- HIDE 1 BOX LANG - YUNG BAWAT ADD LANG -->
+<script>
+setTimeout(function(){
+  var boxes = document.querySelectorAll('div');
+  for(var i=0;i<boxes.length;i++){
+    var txt = boxes[i].textContent || '';
+    // Yung maliit na box lang - yung may Bawat Add at maikli lang
+    // Hindi yung malaking parent na may kasamang ADD RECORD
+    if(txt.includes('Bawat Add, Edit, Delete') && txt.length < 300){
+      boxes[i].style.display = 'none';
+    }
+  }
+}, 800);
+      </script>
 </body>
 </html>
