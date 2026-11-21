@@ -9,13 +9,14 @@
 .sidebar{transition:transform .25s ease}
 @media(max-width:768px){ .sidebar{transform:translateX(-100%); position:fixed; z-index:50; height:100vh} .sidebar.open{transform:translateX(0)} .overlay.show{display:block} }
 .tab-btn.active{ background:#000; color:#fff; }
+.logo-circle{ object-fit:cover; border-radius:9999px; }
 </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
-<!-- LOGIN -->
 <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
-    <div class="text-4xl mb-3">📒</div>
+    <!-- BILOG NA STO NINO - JPG -->
+    <img src="logo.jpg" alt="Sto Nino" class="logo-circle w-28 h-28 mx-auto mb-3 border-4 border-yellow-400 shadow-lg">
     <h1 class="text-2xl font-bold">Stonino Ledger</h1>
     <p class="text-slate-500 text-sm mb-6">Admin Login Only • Email & Password</p>
     <input id="email" type="email" placeholder="Email" class="w-full border rounded-lg p-3 mb-2">
@@ -30,15 +31,14 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="appScreen" class="hidden">
   <div id="overlay" onclick="toggleSidebar()" class="overlay hidden fixed inset-0 bg-black/50 z-40"></div>
   <div class="flex">
-    <!-- SIDEBAR -->
     <div id="sidebar" class="sidebar w-[260px] shrink-0 bg-white min-h-screen p-4 shadow-xl flex flex-col">
-      <div class="flex items-center justify-between mb-6">
-        <div><h1 class="text-xl font-bold leading-none">📒 Stonino</h1><p class="text-xs text-slate-400">Online Ledger</p></div>
-        <button onclick="toggleSidebar()" class="md:hidden text-2xl">×</button>
+      <div class="flex items-center gap-3 mb-6">
+        <img src="logo.jpg" alt="Sto Nino" class="logo-circle w-12 h-12 border-2 border-yellow-400 shrink-0">
+        <div><h1 class="text-xl font-bold leading-none">Stonino</h1><p class="text-xs text-slate-400">Online Ledger</p></div>
+        <button onclick="toggleSidebar()" class="md:hidden text-2xl ml-auto">×</button>
       </div>
       <p id="userEmail" class="text-xs text-slate-500 bg-slate-100 rounded-lg p-2 mb-4 truncate"></p>
       <p class="text-[11px] font-bold text-slate-400 mb-2 tracking-widest">MENU</p>
@@ -53,14 +53,13 @@
       </div>
     </div>
 
-    <!-- MAIN -->
     <div class="flex-1 max-w-3xl mx-auto p-4 w-full">
       <button onclick="toggleSidebar()" class="md:hidden bg-white px-3 py-2 rounded-lg shadow font-bold mb-3">☰ Menu</button>
-
-      <!-- HOME TAB -->
       <div id="tab-home">
-        <h1 class="text-2xl font-bold mb-1">Home</h1>
-        <p class="text-sm text-slate-500 mb-4">Mabilis na overview + Add Record</p>
+        <div class="flex items-center gap-3 mb-4">
+          <img src="logo.jpg" alt="Sto Nino" class="logo-circle w-14 h-14 border-2 border-yellow-400">
+          <div><h1 class="text-2xl font-bold leading-none">Home</h1><p class="text-sm text-slate-500">Sto. Niño • Mabilis na overview</p></div>
+        </div>
         <div class="grid grid-cols-3 gap-3 mb-4">
           <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL INCOME</p><p id="totalIn" class="font-bold text-green-600 text-lg">₱0</p></div>
           <div class="bg-white rounded-xl p-4 text-center"><p class="text-xs text-slate-400">TOTAL EXPENSE</p><p id="totalOut" class="font-bold text-red-600 text-lg">₱0</p></div>
@@ -78,7 +77,6 @@
         <button onclick="showTab('transactions')" class="w-full mt-3 bg-white py-3 rounded-xl font-bold text-sm">View All Transactions →</button>
       </div>
 
-      <!-- MONTHLY TAB -->
       <div id="tab-monthly" class="hidden">
         <h1 class="text-2xl font-bold mb-1">📊 Monthly Report</h1>
         <p class="text-sm text-slate-500 mb-4">Pili ka ng buwan, makikita mo summary + download.</p>
@@ -97,13 +95,11 @@
             <button id="downloadCsv" class="bg-green-600 text-white py-3 rounded-xl font-bold text-sm">⬇ Download CSV / Excel</button>
             <button id="printReport" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">🖨 Print / Save as PDF</button>
           </div>
-          <p class="text-[11px] text-slate-400 mt-2 text-center">CSV = pang Excel. Print = piliin mo Save as PDF.</p>
         </div>
         <h2 class="font-bold mb-2">Records for this month</h2>
         <div id="monthlyList" class="space-y-2"></div>
       </div>
 
-      <!-- TRANSACTIONS TAB -->
       <div id="tab-transactions" class="hidden">
         <h1 class="text-2xl font-bold mb-1">📒 Transactions</h1>
         <p class="text-sm text-slate-500 mb-4">Lahat ng records mo.</p>
@@ -231,4 +227,4 @@ document.getElementById('printReport').onclick = ()=>{
 window.delRec = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db,"finance_records",id)); };
 </script>
 </body>
-                                                     </html>
+                                                                                                                                                                              </html>
